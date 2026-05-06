@@ -10,22 +10,6 @@
 **Document Version:** 3.0 — Adds Quick Start, Day 0 checklist, VPS deployment (Jetorbit), final scope cuts
 **Status:** Ready for sprint kickoff
 
-### What changed from v2.0
-- Added a **Quick Start** section at the top — one-page summary, architecture, and end-to-end flow so the team gets the full picture in 2 minutes.
-- Added a **Day 0 Pre-Flight Checklist** — what to do BEFORE Day 1.
-- Added a complete **VPS Deployment** section spec'd for **Jetorbit Cloud VPS Classic 1** (Jakarta) with concrete specs, prices in IDR, hardening steps, prod docker-compose layout, and Caddy config.
-- Locked in **scope cuts** to absorb the deployment work: dropped Product Hunt, sklearn clustering, run-cancel, eval-on-PR, streaming chat — agent count down from 5 to **4** (Orchestrator + Scraper + Social + Synthesizer; Coder is now a tool, not an agent — see §9 update).
-- Updated **cost budget** to reflect the cuts (~$0.22/run, comfortably under $0.30).
-- Restructured the **sprint plan** to free up Day 9 for VPS deployment + bug bash.
-
-### What changed from v1.0
-- **Persona narrowed** to a single primary user: the indie founder validating an idea.
-- **Cost target dropped** from ~$0.87/run → **~$0.30/run** by switching most agents to `gpt-4o-mini` and reducing tool-call budgets.
-- **Sources revised**: dropped Google Reviews (wrong tool for SaaS) and App Store; added **Reddit + Hacker News**; kept review sites via **Tavily search snippets**.
-- **Frontend**: full **TanStack stack** (Router + Query + Form) instead of `react-router`.
-- **Report format**: 4 founder-focused sections.
-- **Run depth halved** (15 fetches, 8 searches per run).
-
 ---
 
 ## Table of Contents
