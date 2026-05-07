@@ -1,0 +1,24 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Extra system packages for the python_exec sandbox (PRD §13)
+# unshare needs util-linux; cgroups tools for memory cap
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    util-linux \
+    cgroup-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+RUN pip install uv
+
+COPY pyproject.toml .
+RUN uv sync --no-dev
+
+COPY . .
+
+EXPOSE 7000
+
+CMD ["uv", "run", "python", "-m", "mcp_server.server"]
