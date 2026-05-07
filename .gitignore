@@ -21,7 +21,7 @@ htmlcov/
 *.log
 
 # uv
-uv.lock
+# uv.lock is intentionally committed for reproducible installs
 
 # Node
 node_modules/
