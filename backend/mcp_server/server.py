@@ -1,4 +1,5 @@
 """MCP server entrypoint — B-PR2."""
+
 import asyncio
 import json
 import os
@@ -7,11 +8,12 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from dotenv import load_dotenv
+
 load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
+from mcp import types
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp import types
 
 from mcp_server.python_exec import python_exec
 from mcp_server.rag_query import rag_query
@@ -28,7 +30,7 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "code":       {"type": "string", "description": "Python source code"},
+                    "code": {"type": "string", "description": "Python source code"},
                     "dataset_id": {"type": "string", "description": "JSON string dataset"},
                 },
                 "required": ["code", "dataset_id"],
@@ -40,9 +42,9 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "query":  {"type": "string"},
+                    "query": {"type": "string"},
                     "run_id": {"type": "string", "description": "UUID run"},
-                    "top_k":  {"type": "integer", "default": 8},
+                    "top_k": {"type": "integer", "default": 8},
                 },
                 "required": ["query", "run_id"],
             },

@@ -1,14 +1,11 @@
 """python_exec MCP tool — interface contract §7.3."""
 
 import asyncio
-import base64
-import io
 import os
 import platform
 import sys
 import tempfile
 import textwrap
-
 
 # Import yang diizinkan di dalam sandbox
 ALLOWED_IMPORTS = {
@@ -101,7 +98,7 @@ async def python_exec(code: str, dataset_id: str) -> dict:
 
         try:
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             proc.kill()
             return {"stdout": "", "charts": [], "error": "Timeout: eksekusi melebihi 30 detik"}
 
