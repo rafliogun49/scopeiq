@@ -1,4 +1,5 @@
 """Chat endpoints (RAG Q&A) — implemented by Member B."""
+
 from fastapi import APIRouter
 
 router = APIRouter()
