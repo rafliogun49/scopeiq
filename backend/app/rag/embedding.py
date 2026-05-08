@@ -1,13 +1,26 @@
-"""OpenAI embedding wrapper — implemented in B-PR1.
+"""OpenAI embedding wrapper — B-PR1."""
+from openai import AsyncOpenAI
 
-Calls text-embedding-3-small, batched for efficiency.
-Output: list of 1536-dim float vectors.
-See PRD §11 and TEAM_SPLIT §4 (B-PR1).
-"""
-# TODO (B-PR1): call openai.embeddings.create, batch in groups of 100
-# Acceptance: embedding shape is 1536 (unit test in tests/test_rag.py)
+_client: AsyncOpenAI | None = None
+_MODEL = "text-embedding-3-small"
+_BATCH = 100
+
+
+def get_client() -> AsyncOpenAI:
+    global _client
+    if _client is None:
+        _client = AsyncOpenAI()  # baca OPENAI_API_KEY dari env saat pertama dipanggil
+    return _client
 
 
 async def embed_batch(texts: list[str]) -> list[list[float]]:
-    """Returns one 1536-dim vector per input text."""
-    raise NotImplementedError
+    """Returns one 1536-dim vector per input text, batched per 100."""
+    client = get_client()
+    results: list[list[float]] = []
+
+    for i in range(0, len(texts), _BATCH):
+        batch = texts[i : i + _BATCH]
+        response = await client.embeddings.create(model=_MODEL, input=batch)
+        results.extend([item.embedding for item in response.data])
+
+    return results
