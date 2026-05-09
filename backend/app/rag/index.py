@@ -1,19 +1,56 @@
-"""RAG indexing entry point — implements interface contract §7.1.
+"""RAG indexing entry point — B-PR1."""
 
-Called by A's agents after Scraper / Social finish fetching.
-B owns the implementation; A imports index_chunks from here.
-
-Lock the signature by Day 2 (both sides import this module).
-See PRD §11 and TEAM_SPLIT §7.1.
-"""
 from uuid import UUID
 
-from app.schemas.rag import RawDoc
+from sqlmodel import Session
 
-# TODO (B-PR1): implement chunking → embedding → pgvector insert
-# Acceptance: unit test inserts 3 fixture docs → query returns the right one in top-1
+from app.core.db import engine
+from app.models.chunk import Chunk
+from app.rag.chunking import chunk_text
+from app.rag.embedding import embed_batch
+from app.schemas.rag import RawDoc
 
 
 async def index_chunks(run_id: UUID, docs: list[RawDoc]) -> int:
-    """Chunk, embed, and store docs. Returns number of chunks indexed."""
-    raise NotImplementedError
+    """Chunk → embed → simpan ke pgvector. Returns total chunks indexed."""
+
+    # 1. Chunking semua dokumen — simpan teks + metadata dulu
+    all_texts: list[str] = []
+    all_meta: list[dict] = []
+
+    for doc in docs:
+        for t in chunk_text(doc.text):
+            all_texts.append(t)
+            all_meta.append(
+                {
+                    "source_url": doc.url,
+                    "source_type": doc.source_type,
+                    "competitor": doc.competitor,
+                }
+            )
+
+    if not all_texts:
+        return 0
+
+    # 2. Embed semua sekaligus (batched)
+    vectors = await embed_batch(all_texts)
+
+    # 3. Buat Chunk dengan embedding langsung tersedia
+    all_chunks = [
+        Chunk(
+            run_id=run_id,
+            text=text,
+            embedding=vector,
+            source_url=meta["source_url"],
+            source_type=meta["source_type"],
+            competitor=meta["competitor"],
+        )
+        for text, vector, meta in zip(all_texts, vectors, all_meta, strict=False)
+    ]
+
+    # 4. Bulk insert ke database
+    with Session(engine) as session:
+        session.add_all(all_chunks)
+        session.commit()
+
+    return len(all_chunks)
