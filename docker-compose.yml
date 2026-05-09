@@ -29,11 +29,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - /app/.venv
     env_file: .env
     depends_on:
       db:
@@ -46,9 +47,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
+    command: uv run celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
     volumes:
       - ./backend:/app
+      - /app/.venv
     env_file: .env
     depends_on:
       - api
