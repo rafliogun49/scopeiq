@@ -1,4 +1,5 @@
 """RAG indexing entry point — B-PR1."""
+
 from uuid import UUID
 
 from sqlmodel import Session
@@ -20,11 +21,13 @@ async def index_chunks(run_id: UUID, docs: list[RawDoc]) -> int:
     for doc in docs:
         for t in chunk_text(doc.text):
             all_texts.append(t)
-            all_meta.append({
-                "source_url": doc.url,
-                "source_type": doc.source_type,
-                "competitor": doc.competitor,
-            })
+            all_meta.append(
+                {
+                    "source_url": doc.url,
+                    "source_type": doc.source_type,
+                    "competitor": doc.competitor,
+                }
+            )
 
     if not all_texts:
         return 0
@@ -42,7 +45,7 @@ async def index_chunks(run_id: UUID, docs: list[RawDoc]) -> int:
             source_type=meta["source_type"],
             competitor=meta["competitor"],
         )
-        for text, vector, meta in zip(all_texts, vectors, all_meta)
+        for text, vector, meta in zip(all_texts, vectors, all_meta, strict=False)
     ]
 
     # 4. Bulk insert ke database

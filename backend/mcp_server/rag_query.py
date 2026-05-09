@@ -9,9 +9,9 @@ from uuid import UUID
 
 from dotenv import load_dotenv
 
-load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
+from app.rag.retrieval import query as rag_retrieval  # noqa: E402
 
-from app.rag.retrieval import query as rag_retrieval
+load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
 
 async def rag_query(query: str, run_id: str, top_k: int = 8) -> list[dict]:

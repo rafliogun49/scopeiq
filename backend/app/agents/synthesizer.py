@@ -4,14 +4,14 @@ import json
 import pathlib
 from uuid import UUID
 
-from dotenv import load_dotenv
-
-load_dotenv(pathlib.Path(__file__).parent.parent.parent.parent / ".env")  # ← tambah ini
-
 from agents import Agent, Runner, function_tool
+from dotenv import load_dotenv
 
 from app.rag.retrieval import query as _rag_query
 from mcp_server.python_exec import python_exec as _python_exec
+
+load_dotenv(pathlib.Path(__file__).parent.parent.parent.parent / ".env")  # ← tambah ini
+
 
 # Load prompt
 _PROMPT = (pathlib.Path(__file__).parent.parent.parent / "prompts" / "synthesizer.md").read_text()
