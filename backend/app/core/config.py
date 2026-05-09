@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     # Postgres
     DATABASE_URL: str = "postgresql+psycopg://scopeiq:changeme@localhost:5432/scopeiq"
+    TEST_DATABASE_URL: str = ""
 
     # Redis / Celery
     REDIS_URL: str = "redis://localhost:6379/0"
