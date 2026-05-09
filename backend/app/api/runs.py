@@ -1,8 +1,12 @@
 """Runs endpoints + SSE stream — implemented in A-PR3 / A-PR4."""
+import asyncio
+import json
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, status
-from sqlmodel import col, select
+from fastapi.responses import StreamingResponse
+from sqlmodel import Session, col, select
 
 from app.api.deps import CurrentUserDep, SessionDep
 from app.models.project import Project
@@ -17,11 +21,9 @@ from app.workers.tasks import run_research_task
 
 router = APIRouter()
 
-
-# TODO (A-PR4): GET /runs/{id}/stream  → text/event-stream (SSE)
-# SSE event shape is locked in app/schemas/events.py — pair with C on Day 3.
-
 TERMINAL_STATUSES = {"completed", "failed", "cancelled"}
+STREAM_POLL_SECONDS = 0.5
+STREAM_MAX_SECONDS = 600.0  # 10 min hard cap
 
 
 def _load_owned_run(session: SessionDep, run_id: UUID, user_id: UUID) -> Run:
@@ -100,4 +102,84 @@ def list_run_events(
             .offset(offset)
             .limit(limit)
         ).all()
+    )
+
+
+def _format_sse(event: str, data: str) -> str:
+    return f"event: {event}\ndata: {data}\n\n"
+
+
+def _serialize_event(event: RunEvent) -> str:
+    return json.dumps(
+        {
+            "type": event.type,
+            "agent": event.agent,
+            "payload": event.payload,
+            "timestamp": event.timestamp.isoformat(),
+        }
+    )
+
+
+async def _stream_run_events(run_id: UUID):
+    """Async generator: poll RunEvent rows + run status; yield SSE frames."""
+    # Resolve engine lazily via tasks module so test fixtures (which monkeypatch
+    # `tasks_module.engine` to the test DB) are picked up — same pattern as
+    # app.workers.run_events.emit_event.
+    from app.workers import tasks as tasks_module
+
+    last_seen: datetime | None = None
+    elapsed = 0.0
+    while True:
+        with Session(tasks_module.engine) as s:
+            run = s.get(Run, run_id)
+            if run is None:
+                yield _format_sse(
+                    "complete",
+                    json.dumps({"run_id": str(run_id), "status": "failed"}),
+                )
+                return
+            stmt = select(RunEvent).where(RunEvent.run_id == run_id)
+            if last_seen is not None:
+                stmt = stmt.where(col(RunEvent.timestamp) > last_seen)
+            stmt = stmt.order_by(col(RunEvent.timestamp).asc())
+            new_events = list(s.exec(stmt).all())
+            run_status = run.status
+
+        for event in new_events:
+            last_seen = event.timestamp
+            yield _format_sse("progress", _serialize_event(event))
+
+        if run_status in TERMINAL_STATUSES:
+            yield _format_sse(
+                "complete",
+                json.dumps({"run_id": str(run_id), "status": run_status}),
+            )
+            return
+
+        if elapsed >= STREAM_MAX_SECONDS:
+            yield _format_sse(
+                "complete",
+                json.dumps({"run_id": str(run_id), "status": run_status}),
+            )
+            return
+
+        await asyncio.sleep(STREAM_POLL_SECONDS)
+        elapsed += STREAM_POLL_SECONDS
+
+
+@router.get("/runs/{run_id}/stream")
+def stream_run(
+    run_id: UUID,
+    session: SessionDep,
+    current_user: CurrentUserDep,
+) -> StreamingResponse:
+    _load_owned_run(session, run_id, current_user.id)
+    return StreamingResponse(
+        _stream_run_events(run_id),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
     )
