@@ -1,4 +1,4 @@
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 
 import pytest
 from fastapi.testclient import TestClient
@@ -54,3 +54,31 @@ def client(session) -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def _celery_eager(engine, monkeypatch):
+    """Run Celery tasks synchronously and bind the worker session to the test engine."""
+    from app.workers import celery_app as celery_module
+    from app.workers import tasks as tasks_module
+
+    celery_module.celery_app.conf.task_always_eager = True
+    celery_module.celery_app.conf.task_eager_propagates = True
+    monkeypatch.setattr(tasks_module, "engine", engine)
+    yield
+    celery_module.celery_app.conf.task_always_eager = False
+    celery_module.celery_app.conf.task_eager_propagates = False
+
+
+@pytest.fixture
+def auth_headers(client) -> Callable[..., dict[str, str]]:
+    def _make(email: str = "test@example.com", password: str = "supersecret123") -> dict[str, str]:
+        r = client.post(
+            "/api/v1/auth/signup",
+            json={"email": email, "password": password},
+        )
+        assert r.status_code == 201, r.text
+        token = r.json()["access_token"]
+        return {"Authorization": f"Bearer {token}"}
+
+    return _make
