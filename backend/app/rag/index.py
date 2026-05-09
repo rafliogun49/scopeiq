@@ -6,6 +6,7 @@ B owns the implementation; A imports index_chunks from here.
 Lock the signature by Day 2 (both sides import this module).
 See PRD §11 and TEAM_SPLIT §7.1.
 """
+
 from uuid import UUID
 
 from app.schemas.rag import RawDoc
