@@ -1,5 +1,4 @@
 """Celery tasks — stub expanded in A-PR3 and A-PR4."""
-from uuid import UUID
 
 from app.workers.celery_app import celery_app
 

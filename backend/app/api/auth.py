@@ -1,4 +1,5 @@
 """Auth endpoints — implemented in A-PR2."""
+
 from fastapi import APIRouter
 
 router = APIRouter()

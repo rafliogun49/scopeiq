@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column
@@ -13,4 +13,4 @@ class Project(SQLModel, table=True):
     idea: str
     known_competitors: list[str] = Field(default=[], sa_column=Column(JSONB))
     archived: bool = False
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
