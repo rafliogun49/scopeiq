@@ -13,6 +13,9 @@ from urllib.robotparser import RobotFileParser
 
 import httpx
 
+from app.core.config import settings
+from app.core.retry import async_retry
+from app.workers.budget import BudgetExceeded, get_budget
 from app.workers.run_events import emit_event
 
 USER_AGENT = "ScopeIQBot/0.1 (+https://github.com/social-wiz/scopeiq)"
@@ -79,13 +82,28 @@ async def http_fetch(url: str, render_js: bool = False) -> dict[str, Any]:
             emit_event("tool_called", agent="scraper", payload={"tool": "http_fetch", "url": url, "status": 0, "skipped": "robots"})
             return {"status": 0, "html": "", "text": "", "skipped": "robots"}
 
+        # Record this fetch against the per-run budget before making the request.
+        # BudgetExceeded propagates up to the agent runner / Celery task.
+        budget = get_budget()
+        if budget is not None:
+            budget.record_tool_call("fetch")
+
         async with _host_lock(host):
             wait = PER_HOST_INTERVAL_SECONDS - (time.monotonic() - _last_request_at.get(host, 0.0))
             if wait > 0:
                 await asyncio.sleep(wait)
             try:
-                r = await client.get(url)
-            except httpx.HTTPError as exc:
+                r = await async_retry(
+                    lambda: client.get(url),
+                    attempts=settings.RETRY_ATTEMPTS,
+                    base_seconds=settings.RETRY_BASE_SECONDS,
+                )
+            except BudgetExceeded:
+                # Budget cap hit inside retry — propagate so the run can be marked failed.
+                _last_request_at[host] = time.monotonic()
+                raise
+            except Exception as exc:
+                # httpx.HTTPError exhausted all retries or other failure — return error dict.
                 _last_request_at[host] = time.monotonic()
                 emit_event("tool_called", agent="scraper", payload={"tool": "http_fetch", "url": url, "status": 0, "error": str(exc)})
                 return {"status": 0, "html": "", "text": "", "error": str(exc)}

@@ -67,6 +67,10 @@ def test_create_run_dispatches_task_and_completes(client: TestClient, auth_heade
     assert run["status"] == "completed"
     assert run["started_at"] is not None
     assert run["finished_at"] is not None
+    # A-PR5: token counts and cost must be populated after a real (stub) run.
+    assert run["token_input"] > 0
+    assert run["token_output"] > 0
+    assert run["cost_usd"] > 0
 
 
 def test_create_run_on_other_users_project_returns_404(client: TestClient, auth_headers):
@@ -167,13 +171,14 @@ def test_events_pagination_respects_limit(client: TestClient, auth_headers):
         f"/api/v1/projects/{project_id}/runs", headers=headers
     ).json()["run_id"]
 
+    # Event sequence: plan(0), log/caps(1), agent_started/orchestrator(2), ...
+    # Use offset=2 to land on orchestrator's agent_started.
     r = client.get(
-        f"/api/v1/runs/{run_id}/events?offset=1&limit=1", headers=headers
+        f"/api/v1/runs/{run_id}/events?offset=2&limit=1", headers=headers
     )
     assert r.status_code == 200
     body = r.json()
     assert len(body) == 1
-    # Second event is the orchestrator's agent_started (after plan).
     assert body[0]["type"] == "agent_started"
     assert body[0]["agent"] == "orchestrator"
 

@@ -37,6 +37,15 @@ class Settings(BaseSettings):
     # CORS — frontend origins allowed
     CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
 
+    # Budget & resilience (A-PR5)
+    BUDGET_INPUT_TOKENS: int = 100_000
+    BUDGET_OUTPUT_TOKENS: int = 25_000
+    MAX_FETCHES: int = 15
+    MAX_SEARCHES: int = 8
+    MAX_AGENT_TURNS: int = 12
+    RETRY_ATTEMPTS: int = 3
+    RETRY_BASE_SECONDS: float = 2.0
+
 
 settings = Settings()
 

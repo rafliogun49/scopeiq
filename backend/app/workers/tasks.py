@@ -10,6 +10,7 @@ from sqlmodel import Session
 from app.core.db import engine
 from app.models.project import Project
 from app.models.run import Run, RunEvent
+from app.workers.budget import BudgetExceeded, RunBudget, budget_var
 from app.workers.celery_app import celery_app
 
 
@@ -31,6 +32,11 @@ def run_research_task(self, run_id: str) -> dict:
         run = session.get(Run, run_uuid)
         if run is None:
             return {"run_id": run_id, "status": "not_found"}
+
+        # Initialise a fresh per-run budget and bind it to this async context.
+        budget = RunBudget.from_settings()
+        budget_var.set(budget)
+
         try:
             run.status = "running"
             run.started_at = datetime.now(UTC)
@@ -50,6 +56,15 @@ def run_research_task(self, run_id: str) -> dict:
                         "idea": project.idea,
                         "competitors": list(project.known_competitors or []),
                     },
+                )
+            )
+            # Emit the active budget caps so the frontend can display them.
+            session.add(
+                RunEvent(
+                    run_id=run_uuid,
+                    type="log",
+                    agent="orchestrator",
+                    payload={"caps": budget.caps_snapshot()},
                 )
             )
             session.commit()
@@ -84,9 +99,36 @@ def run_research_task(self, run_id: str) -> dict:
 
             run.status = "completed"
             run.finished_at = datetime.now(UTC)
+            run.token_input = budget.input_tokens
+            run.token_output = budget.output_tokens
+            run.cost_usd = budget.cost_usd
             session.add(run)
             session.commit()
             return {"run_id": run_id, "status": "completed"}
+
+        except BudgetExceeded as exc:
+            session.rollback()
+            run = session.get(Run, run_uuid)
+            if run is not None:
+                session.add(
+                    RunEvent(
+                        run_id=run_uuid,
+                        type="error",
+                        agent="orchestrator",
+                        payload={"reason": "budget_exceeded", "cap": exc.reason},
+                    )
+                )
+                run.status = "failed"
+                run.error = str(exc)
+                run.finished_at = datetime.now(UTC)
+                # Persist partial counters so the UI can show what was consumed.
+                run.token_input = budget.input_tokens
+                run.token_output = budget.output_tokens
+                run.cost_usd = budget.cost_usd
+                session.add(run)
+                session.commit()
+            return {"run_id": run_id, "status": "failed"}
+
         except Exception as exc:
             session.rollback()
             run = session.get(Run, run_uuid)
@@ -102,6 +144,9 @@ def run_research_task(self, run_id: str) -> dict:
                 run.status = "failed"
                 run.error = str(exc)
                 run.finished_at = datetime.now(UTC)
+                run.token_input = budget.input_tokens
+                run.token_output = budget.output_tokens
+                run.cost_usd = budget.cost_usd
                 session.add(run)
                 session.commit()
             return {"run_id": run_id, "status": "failed"}

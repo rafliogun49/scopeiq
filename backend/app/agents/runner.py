@@ -17,6 +17,7 @@ from app.schemas.rag import RawDoc
 from app.tools.discover_urls import discover_urls
 from app.tools.extract_text import extract_text
 from app.tools.http_fetch import http_fetch
+from app.workers.budget import BudgetExceeded, get_budget
 from app.workers.run_events import emit_event, run_id_var
 
 _USE_STUB = False
@@ -39,9 +40,21 @@ def _classify_source(url: str) -> SourceType:
     return "landing"
 
 
+def _estimate_tokens(text: str, model: str = "gpt-4o-mini") -> int:
+    """Rough token estimate via tiktoken; falls back to word-count if unavailable."""
+    try:
+        import tiktoken
+
+        enc = tiktoken.encoding_for_model(model)
+        return len(enc.encode(text))
+    except Exception:
+        return max(1, len(text.split()))
+
+
 async def _run_stub(project: Project) -> list[RawDoc]:
     docs: list[RawDoc] = []
     raw_docs_var.set(docs)
+    budget = get_budget()
 
     emit_event("agent_started", agent="orchestrator", payload={"mode": "stub"})
     for competitor in project.known_competitors or []:
@@ -56,15 +69,24 @@ async def _run_stub(project: Project) -> list[RawDoc]:
             if not html:
                 continue
             extracted = extract_text(html, base_url=url)
-            if extracted["text"]:
+            text = extracted["text"]
+            if text:
                 per_competitor.append(
                     RawDoc(
                         url=url,
-                        text=extracted["text"],
+                        text=text,
                         source_type=_classify_source(url),
                         competitor=competitor,
                     )
                 )
+                # Estimate tokens for the scraping prompt + extracted content.
+                if budget is not None:
+                    prompt = f"Scrape {url} for {competitor}"
+                    budget.add_tokens(
+                        input_tokens=_estimate_tokens(prompt),
+                        output_tokens=_estimate_tokens(text),
+                        model="gpt-4o-mini",
+                    )
         docs.extend(per_competitor)
         emit_event(
             "agent_finished",
@@ -72,7 +94,16 @@ async def _run_stub(project: Project) -> list[RawDoc]:
             payload={"competitor": competitor, "docs": len(per_competitor)},
         )
 
-    emit_event("agent_finished", agent="orchestrator", payload={"docs": len(docs)})
+    budget_payload: dict = {"docs": len(docs)}
+    if budget is not None:
+        budget_payload.update(
+            {
+                "tokens_in": budget.input_tokens,
+                "tokens_out": budget.output_tokens,
+                "cost_usd": round(budget.cost_usd, 6),
+            }
+        )
+    emit_event("agent_finished", agent="orchestrator", payload=budget_payload)
     return docs
 
 
@@ -81,9 +112,11 @@ async def _run_real(project: Project) -> list[RawDoc]:
 
     from app.agents.orchestrator import orchestrator_agent
     from app.agents.scraper import scraper_agent
+    from app.core.config import settings
 
     docs: list[RawDoc] = []
     raw_docs_var.set(docs)
+    budget = get_budget()
     competitors = list(project.known_competitors or [])
     if competitors:
         current_competitor_var.set(competitors[0])
@@ -93,10 +126,31 @@ async def _run_real(project: Project) -> list[RawDoc]:
             self.agent_name = agent_name
 
         async def on_start(self, context, agent) -> None:  # type: ignore[override]
+            if budget is not None:
+                budget.check_turn(self.agent_name)
             emit_event("agent_started", agent=self.agent_name)
 
         async def on_end(self, context, agent, output) -> None:  # type: ignore[override]
-            payload = {"docs": len(docs)} if self.agent_name == "scraper" else {}
+            # Accumulate real token usage from the SDK's RunResult.
+            if budget is not None:
+                usage = getattr(output, "usage", None) or getattr(output, "raw_responses", None)
+                if usage is not None and hasattr(usage, "input_tokens"):
+                    budget.add_tokens(
+                        input_tokens=usage.input_tokens,
+                        output_tokens=usage.output_tokens,
+                        model="gpt-4o-mini",
+                    )
+            payload: dict = {}
+            if self.agent_name == "scraper":
+                payload["docs"] = len(docs)
+            if budget is not None:
+                payload.update(
+                    {
+                        "tokens_in": budget.input_tokens,
+                        "tokens_out": budget.output_tokens,
+                        "cost_usd": round(budget.cost_usd, 6),
+                    }
+                )
             emit_event("agent_finished", agent=self.agent_name, payload=payload)
 
     orchestrator_agent.hooks = _Hooks("orchestrator")
@@ -108,7 +162,7 @@ async def _run_real(project: Project) -> list[RawDoc]:
         "Hand off to the Scraper. The Scraper should call discover_urls for each "
         "competitor, then http_fetch + extract_text on the URLs it returns."
     )
-    await Runner.run(orchestrator_agent, input=prompt)
+    await Runner.run(orchestrator_agent, input=prompt, max_turns=settings.MAX_AGENT_TURNS)
     return docs
 
 
