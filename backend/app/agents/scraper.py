@@ -1,8 +1,13 @@
 """Scraper agent — A-PR4.
 
 Fetches competitor landing/pricing/about pages. Uses gpt-4o-mini.
-Tools: http_fetch, extract_text, discover_urls.
-See PRD §10 and TEAM_SPLIT §3 (A-PR4).
+Tools: http_fetch, discover_urls. See PRD §10 and TEAM_SPLIT §3 (A-PR4).
+
+Why http_fetch_tool returns metadata instead of full HTML/text:
+the openai-agents SDK accumulates every tool result into conversation history,
+so returning raw HTML (~50–200KB/page) blew the context window after a few
+fetches. The full extracted text is still captured in raw_docs_var for the
+downstream index_chunks() call; the LLM only needs to know fetches succeeded.
 """
 from __future__ import annotations
 
@@ -36,28 +41,31 @@ def _classify(url: str) -> SourceType:
 
 @function_tool
 async def http_fetch_tool(url: str) -> dict[str, Any]:
-    """Fetch a URL via HTTP, respecting robots.txt and per-host rate limits."""
+    """Fetch a URL, store its extracted text, and return only metadata (status, char count)."""
     result = await _http_fetch(url)
-    docs = raw_docs_var.get()
-    text_html = result.get("html", "")
-    if docs is not None and text_html:
-        extracted = _extract_text(text_html, base_url=url)
-        if extracted["text"]:
+    status = result.get("status", 0)
+    chars = 0
+    html = result.get("html", "")
+    if html:
+        extracted = _extract_text(html, base_url=url)
+        text = extracted["text"]
+        chars = len(text)
+        docs = raw_docs_var.get()
+        if docs is not None and text:
             docs.append(
                 RawDoc(
                     url=url,
-                    text=extracted["text"],
+                    text=text,
                     source_type=_classify(url),
                     competitor=current_competitor_var.get(),
                 )
             )
-    return result
-
-
-@function_tool
-def extract_text_tool(html: str, base_url: str | None = None) -> dict[str, Any]:
-    """Extract title, body text, and outbound links from raw HTML."""
-    return _extract_text(html, base_url=base_url)
+    summary: dict[str, Any] = {"url": url, "status": status, "chars": chars}
+    if "skipped" in result:
+        summary["skipped"] = result["skipped"]
+    if "error" in result:
+        summary["error"] = result["error"]
+    return summary
 
 
 @function_tool
@@ -71,5 +79,5 @@ scraper_agent = Agent(
     name="Scraper",
     model="gpt-4o-mini",
     instructions=_PROMPT_PATH.read_text(encoding="utf-8") if _PROMPT_PATH.exists() else "",
-    tools=[discover_urls_tool, http_fetch_tool, extract_text_tool],
+    tools=[discover_urls_tool, http_fetch_tool],
 )

@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,3 +39,12 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# pydantic-settings populates `Settings` from .env, but third-party SDKs
+# (openai, openai-agents, tavily) read their keys directly from `os.environ`.
+# Mirror the relevant secrets so they're visible to those libraries without
+# requiring callers to use `uv run --env-file`.
+for _name in ("OPENAI_API_KEY", "TAVILY_API_KEY"):
+    _value = getattr(settings, _name, "")
+    if _value and not os.environ.get(_name):
+        os.environ[_name] = _value
