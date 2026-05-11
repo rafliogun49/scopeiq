@@ -1,11 +1,12 @@
 """tavily_search tool — B-PR3."""
 
 import os
+import pathlib
 
 from dotenv import load_dotenv
 from tavily import AsyncTavilyClient
 
-load_dotenv()  # ← tambah
+load_dotenv(pathlib.Path(__file__).parent.parent.parent.parent / ".env")
 
 
 def _client() -> AsyncTavilyClient:

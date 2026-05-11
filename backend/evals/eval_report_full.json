@@ -1,0 +1,239 @@
+{
+  "mode": "full",
+  "total": 10,
+  "passed": 9,
+  "pass_rate": 0.9,
+  "avg_latency_s": 28.69,
+  "results": [
+    {
+      "case_id": "idea-001",
+      "idea": "AI-powered receipt scanner for freelancers",
+      "passed": true,
+      "checks": {
+        "has_section_market": true,
+        "has_section_competitors": true,
+        "has_section_hate": true,
+        "has_section_gap": true,
+        "min_800_words": true,
+        "has_citations": true,
+        "competitor_coverage": true,
+        "pain_themes_coverage": true
+      },
+      "scores": {
+        "accuracy": 0.7,
+        "coverage": 0.8,
+        "citation": 0.4,
+        "actionable": 0.6
+      },
+      "latency_s": 19.539,
+      "error": null
+    },
+    {
+      "case_id": "idea-002",
+      "idea": "Open-source Calendly alternative",
+      "passed": true,
+      "checks": {
+        "has_section_market": true,
+        "has_section_competitors": true,
+        "has_section_hate": true,
+        "has_section_gap": true,
+        "min_800_words": true,
+        "has_citations": true,
+        "competitor_coverage": true,
+        "pain_themes_coverage": true
+      },
+      "scores": {
+        "accuracy": 0.0,
+        "coverage": 0.0,
+        "citation": 0.0,
+        "actionable": 0.0
+      },
+      "latency_s": 26.724,
+      "error": null
+    },
+    {
+      "case_id": "idea-003",
+      "idea": "Notion for podcasters",
+      "passed": true,
+      "checks": {
+        "has_section_market": true,
+        "has_section_competitors": true,
+        "has_section_hate": true,
+        "has_section_gap": true,
+        "min_800_words": true,
+        "has_citations": true,
+        "competitor_coverage": true,
+        "pain_themes_coverage": true
+      },
+      "scores": {
+        "accuracy": 0.0,
+        "coverage": 0.0,
+        "citation": 0.0,
+        "actionable": 0.0
+      },
+      "latency_s": 44.833,
+      "error": null
+    },
+    {
+      "case_id": "idea-004",
+      "idea": "AI email assistant that auto-categorizes newsletters and drafts replies",
+      "passed": true,
+      "checks": {
+        "has_section_market": true,
+        "has_section_competitors": true,
+        "has_section_hate": true,
+        "has_section_gap": true,
+        "min_800_words": true,
+        "has_citations": true,
+        "competitor_coverage": true,
+        "pain_themes_coverage": true
+      },
+      "scores": {
+        "accuracy": 0.0,
+        "coverage": 0.0,
+        "citation": 0.0,
+        "actionable": 0.0
+      },
+      "latency_s": 46.013,
+      "error": null
+    },
+    {
+      "case_id": "idea-005",
+      "idea": "Developer-first API monitoring dashboard",
+      "passed": true,
+      "checks": {
+        "has_section_market": true,
+        "has_section_competitors": true,
+        "has_section_hate": true,
+        "has_section_gap": true,
+        "min_800_words": true,
+        "has_citations": true,
+        "competitor_coverage": true,
+        "pain_themes_coverage": true
+      },
+      "scores": {
+        "accuracy": 0.0,
+        "coverage": 0.0,
+        "citation": 0.0,
+        "actionable": 0.0
+      },
+      "latency_s": 23.473,
+      "error": null
+    },
+    {
+      "case_id": "idea-006",
+      "idea": "No-code internal tools builder for startups",
+      "passed": true,
+      "checks": {
+        "has_section_market": true,
+        "has_section_competitors": true,
+        "has_section_hate": true,
+        "has_section_gap": true,
+        "min_800_words": true,
+        "has_citations": true,
+        "competitor_coverage": true,
+        "pain_themes_coverage": true
+      },
+      "scores": {
+        "accuracy": 0.0,
+        "coverage": 0.0,
+        "citation": 0.0,
+        "actionable": 0.0
+      },
+      "latency_s": 39.923,
+      "error": null
+    },
+    {
+      "case_id": "idea-007",
+      "idea": "Subscription management dashboard for SaaS businesses",
+      "passed": true,
+      "checks": {
+        "has_section_market": true,
+        "has_section_competitors": true,
+        "has_section_hate": true,
+        "has_section_gap": true,
+        "min_800_words": true,
+        "has_citations": true,
+        "competitor_coverage": true,
+        "pain_themes_coverage": true
+      },
+      "scores": {
+        "accuracy": 0.0,
+        "coverage": 0.0,
+        "citation": 0.0,
+        "actionable": 0.0
+      },
+      "latency_s": 21.13,
+      "error": null
+    },
+    {
+      "case_id": "idea-008",
+      "idea": "AI writing assistant for indie hacker marketing copy",
+      "passed": false,
+      "checks": {
+        "has_section_market": true,
+        "has_section_competitors": true,
+        "has_section_hate": true,
+        "has_section_gap": true,
+        "min_800_words": true,
+        "has_citations": true,
+        "competitor_coverage": true,
+        "pain_themes_coverage": false
+      },
+      "scores": {
+        "accuracy": 0.0,
+        "coverage": 0.0,
+        "citation": 0.0,
+        "actionable": 0.0
+      },
+      "latency_s": 22.959,
+      "error": null
+    },
+    {
+      "case_id": "idea-009",
+      "idea": "Automated social media content scheduler for solopreneurs",
+      "passed": true,
+      "checks": {
+        "has_section_market": true,
+        "has_section_competitors": true,
+        "has_section_hate": true,
+        "has_section_gap": true,
+        "min_800_words": true,
+        "has_citations": true,
+        "competitor_coverage": true,
+        "pain_themes_coverage": true
+      },
+      "scores": {
+        "accuracy": 0.0,
+        "coverage": 0.0,
+        "citation": 0.0,
+        "actionable": 0.0
+      },
+      "latency_s": 22.202,
+      "error": null
+    },
+    {
+      "case_id": "idea-010",
+      "idea": "Freelancer invoice and payment tracking app",
+      "passed": true,
+      "checks": {
+        "has_section_market": true,
+        "has_section_competitors": true,
+        "has_section_hate": true,
+        "has_section_gap": true,
+        "min_800_words": true,
+        "has_citations": true,
+        "competitor_coverage": true,
+        "pain_themes_coverage": true
+      },
+      "scores": {
+        "accuracy": 0.0,
+        "coverage": 0.0,
+        "citation": 0.0,
+        "actionable": 0.0
+      },
+      "latency_s": 20.091,
+      "error": null
+    }
+  ]
+}

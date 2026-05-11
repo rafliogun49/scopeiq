@@ -33,6 +33,7 @@ dependencies = [
     "mcp>=1.0",
     # Rate limiting
     "slowapi>=0.1",
+    "matplotlib>=3.10.9",
 ]
 
 [dependency-groups]

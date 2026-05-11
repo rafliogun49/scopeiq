@@ -43,7 +43,7 @@ _orig_savefig = plt.savefig
 
 def _capture_savefig(fname=None, *args, **kwargs):
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", *args, **kwargs)
+    _orig_savefig(buf, format="png")  # ← pakai original, bukan plt.savefig
     buf.seek(0)
     _charts.append(base64.b64encode(buf.read()).decode())
 
@@ -59,19 +59,20 @@ try:
 finally:
     _sys.stdout = sys.__stdout__
 
-print(json.dumps({{
+print(json.dumps({
     "stdout": _stdout.getvalue(),
     "charts": _charts,
-}}))
+}))
 """)
 
 
 async def python_exec(code: str, dataset_id: str) -> dict:
-    """Jalankan code Python di subprocess sandbox. Returns {{stdout, charts}}."""
+    """Jalankan code Python di subprocess sandbox. Returns {stdout, charts}."""
 
     # Indent user code supaya masuk ke dalam script wrapper
     indented = textwrap.indent(code, "    ")
-    script = SANDBOX_SCRIPT.format(user_code=indented)
+    script = SANDBOX_SCRIPT.replace("{user_code}", indented)
+
 
     # Tulis ke temp file
     with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
