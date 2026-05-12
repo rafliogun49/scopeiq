@@ -8,5 +8,6 @@ export const qk = {
   project: (id: string) => ["projects", id] as const,
   runs: (projectId: string) => ["projects", projectId, "runs"] as const,
   run: (id: string) => ["runs", id] as const,
+  report: (projectId: string) => ["projects", projectId, "report"] as const,
   messages: (projectId: string) => ["projects", projectId, "messages"] as const,
 };
