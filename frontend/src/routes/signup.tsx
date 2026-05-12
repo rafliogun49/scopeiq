@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export const Route = createFileRoute("/_authed/signup")({
+export const Route = createFileRoute("/signup")({
   component: SignupPage,
 });
 
@@ -58,7 +58,7 @@ function SignupPage() {
           password: value.password,
         });
         setToken(response.token);
-        navigate({ to: "/projects" });
+        navigate({ to: "/" });
       } catch (error) {
         form.setErrorMap({
           form: "Failed to create account. Email may already be in use.",
@@ -169,10 +169,6 @@ function SignupPage() {
               <a
                 href="/login"
                 className="font-medium text-primary hover:underline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate({ to: "/login" });
-                }}
               >
                 Sign in
               </a>

@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export const Route = createFileRoute("/_authed/login")({
+export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
@@ -53,7 +53,7 @@ function LoginPage() {
           password: value.password,
         });
         setToken(response.token);
-        navigate({ to: "/projects" });
+        navigate({ to: "/" });
       } catch (error) {
         form.setErrorMap({
           form: "Invalid email or password",
@@ -139,10 +139,6 @@ function LoginPage() {
               <a
                 href="/signup"
                 className="font-medium text-primary hover:underline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate({ to: "/signup" });
-                }}
               >
                 Sign up
               </a>
