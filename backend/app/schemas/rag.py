@@ -12,5 +12,12 @@ from pydantic import BaseModel
 class RawDoc(BaseModel):
     url: str
     text: str
-    source_type: Literal["landing", "pricing", "review_snippet", "community", "hn", "stackexchange"]
+    source_type: Literal[
+        "landing",
+        "pricing",
+        "review_snippet",
+        "community",
+        "hn",
+        "stackexchange",
+    ]
     competitor: str | None = None

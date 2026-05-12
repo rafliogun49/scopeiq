@@ -1,6 +1,6 @@
 """Auth helpers — bcrypt + JWT. Implemented in A-PR2."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from jose import jwt
 from passlib.context import CryptContext
