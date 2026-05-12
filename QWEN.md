@@ -187,6 +187,28 @@ See `PRD.md §23` and `deploy/setup-vps.sh` for full VPS setup.
 - `develop` branch for integration
 - Commit prefix convention: `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `ci:`
 
+### AI Agent Design (Taste Skills)
+
+This project uses [Taste Skill](https://www.tasteskill.dev/) — an anti-slop frontend framework for AI agents — to ensure premium, non-generic UI output.
+
+**Installed Skills** (`.agents/skills/`):
+| Skill | Purpose |
+|-------|---------|
+| `design-taste-frontend` | Default UI/UX engineering directives (Variance: 8, Motion: 6, Density: 4) |
+| `high-end-visual-design` | Awwwards-tier agency design with haptic micro-aesthetics |
+| `stitch-design-taste` | Google Stitch semantic design system generation |
+
+**Key Design Rules:**
+- **Fonts:** `Geist`, `Satoshi`, `Cabinet Grotesk` (Inter is BANNED for premium contexts)
+- **Colors:** Neutral bases (Zinc/Slate) with max 1 accent; AI Purple/Blue neon is BANNED
+- **Layouts:** Asymmetric, offset grids; centered hero sections are BANNED for Variance > 4
+- **Motion:** Framer Motion with spring physics (`stiffness: 100, damping: 20`); no linear easing
+- **Icons:** Phosphor Icons or Radix Icons with consistent `strokeWidth: 1.5` or `2.0`
+- **Mobile:** Use `min-h-[100dvh]` (NOT `h-screen`) for full-height sections
+- **No Emojis:** Replaced with high-quality icon primitives
+
+**For AI Agents:** When generating frontend code, always load and follow the directives in `.agents/skills/design-taste-frontend/SKILL.md`.
+
 ### CI/CD (GitHub Actions)
 On every PR:
 - Backend: lint, typecheck, tests

@@ -10,7 +10,7 @@ repos:
     rev: v3.0.0
     hooks:
       - id: prettier
-        types_or: [css, javascript, typescript, tsx]
+        types_or: [css, javascript, tsx]
         files: ^frontend/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
