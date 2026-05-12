@@ -3,7 +3,7 @@
 Backend emits these as SSE data payloads; frontend mirrors in lib/sse.ts.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any, Literal
 from uuid import UUID
 
