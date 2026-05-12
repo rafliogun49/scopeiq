@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column
@@ -12,4 +12,4 @@ class ChatMessage(SQLModel, table=True):
     role: str  # user | assistant
     content: str
     citations: list[dict] = Field(default=[], sa_column=Column(JSONB))
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
