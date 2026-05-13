@@ -5,7 +5,6 @@ Revises:
 Create Date: 2026-05-08 13:50:56.259952
 
 """
-
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -14,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision: str = "0dd2f4ddba50"
+revision: str = '0dd2f4ddba50'
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

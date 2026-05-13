@@ -2,7 +2,10 @@
 
 Backend emits these as SSE data payloads; frontend mirrors in lib/sse.ts.
 """
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/develop
 from datetime import UTC, datetime
 from typing import Any, Literal
 from uuid import UUID
