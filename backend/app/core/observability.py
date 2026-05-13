@@ -146,19 +146,21 @@ def get_client() -> _LangfuseWrapper:
 # @observe decorator
 # ---------------------------------------------------------------------------
 
-def observe(name: str, as_type: str = "span") -> Callable:
+def observe(name: str = "", as_type: str = "span", **kwargs: Any) -> Callable:
     """Wrap a sync or async function with a Langfuse observation.
 
-    *as_type* is passed through only when Langfuse supports it ('generation');
-    other values (e.g. 'agent') are silently treated as a plain span to avoid
-    SDK validation errors.
+    Accepts the same keyword arguments as langfuse.decorators.observe
+    (e.g. capture_input, capture_output). *as_type* values other than
+    'generation' are treated as a plain span to avoid SDK validation errors.
     """
     if _LANGFUSE_AVAILABLE:
         try:
-            kwargs: dict[str, Any] = {"name": name}
+            lf_kwargs: dict[str, Any] = {**kwargs}
+            if name:
+                lf_kwargs["name"] = name
             if as_type == "generation":
-                kwargs["as_type"] = "generation"
-            return _lf_observe(**kwargs)
+                lf_kwargs["as_type"] = "generation"
+            return _lf_observe(**lf_kwargs)
         except Exception as exc:
             logger.debug("observe decorator setup failed: %s", exc)
 
