@@ -1,36 +1,15 @@
 {
   "mode": "full",
+  "timestamp": "2026-05-13T06:10:19Z",
   "total": 10,
-  "passed": 9,
-  "pass_rate": 0.9,
-  "avg_latency_s": 28.69,
+  "passed": 10,
+  "pass_rate": 1.0,
+  "avg_latency_s": 25.84,
+  "acceptance_80pct": true,
   "results": [
     {
       "case_id": "idea-001",
       "idea": "AI-powered receipt scanner for freelancers",
-      "passed": true,
-      "checks": {
-        "has_section_market": true,
-        "has_section_competitors": true,
-        "has_section_hate": true,
-        "has_section_gap": true,
-        "min_800_words": true,
-        "has_citations": true,
-        "competitor_coverage": true,
-        "pain_themes_coverage": true
-      },
-      "scores": {
-        "accuracy": 0.7,
-        "coverage": 0.8,
-        "citation": 0.4,
-        "actionable": 0.6
-      },
-      "latency_s": 19.539,
-      "error": null
-    },
-    {
-      "case_id": "idea-002",
-      "idea": "Open-source Calendly alternative",
       "passed": true,
       "checks": {
         "has_section_market": true,
@@ -48,7 +27,30 @@
         "citation": 0.0,
         "actionable": 0.0
       },
-      "latency_s": 26.724,
+      "latency_s": 24.584,
+      "error": null
+    },
+    {
+      "case_id": "idea-002",
+      "idea": "Open-source Calendly alternative",
+      "passed": true,
+      "checks": {
+        "has_section_market": true,
+        "has_section_competitors": true,
+        "has_section_hate": true,
+        "has_section_gap": true,
+        "min_800_words": true,
+        "has_citations": true,
+        "competitor_coverage": true,
+        "pain_themes_coverage": true
+      },
+      "scores": {
+        "accuracy": 0.5,
+        "coverage": 0.6,
+        "citation": 0.0,
+        "actionable": 0.4
+      },
+      "latency_s": 25.71,
       "error": null
     },
     {
@@ -71,7 +73,7 @@
         "citation": 0.0,
         "actionable": 0.0
       },
-      "latency_s": 44.833,
+      "latency_s": 22.459,
       "error": null
     },
     {
@@ -94,7 +96,7 @@
         "citation": 0.0,
         "actionable": 0.0
       },
-      "latency_s": 46.013,
+      "latency_s": 26.122,
       "error": null
     },
     {
@@ -112,12 +114,12 @@
         "pain_themes_coverage": true
       },
       "scores": {
-        "accuracy": 0.0,
-        "coverage": 0.0,
+        "accuracy": 0.7,
+        "coverage": 0.6,
         "citation": 0.0,
-        "actionable": 0.0
+        "actionable": 0.5
       },
-      "latency_s": 23.473,
+      "latency_s": 40.157,
       "error": null
     },
     {
@@ -140,7 +142,7 @@
         "citation": 0.0,
         "actionable": 0.0
       },
-      "latency_s": 39.923,
+      "latency_s": 18.001,
       "error": null
     },
     {
@@ -163,13 +165,13 @@
         "citation": 0.0,
         "actionable": 0.0
       },
-      "latency_s": 21.13,
+      "latency_s": 25.286,
       "error": null
     },
     {
       "case_id": "idea-008",
       "idea": "AI writing assistant for indie hacker marketing copy",
-      "passed": false,
+      "passed": true,
       "checks": {
         "has_section_market": true,
         "has_section_competitors": true,
@@ -178,7 +180,7 @@
         "min_800_words": true,
         "has_citations": true,
         "competitor_coverage": true,
-        "pain_themes_coverage": false
+        "pain_themes_coverage": true
       },
       "scores": {
         "accuracy": 0.0,
@@ -186,7 +188,7 @@
         "citation": 0.0,
         "actionable": 0.0
       },
-      "latency_s": 22.959,
+      "latency_s": 30.646,
       "error": null
     },
     {
@@ -209,7 +211,7 @@
         "citation": 0.0,
         "actionable": 0.0
       },
-      "latency_s": 22.202,
+      "latency_s": 23.64,
       "error": null
     },
     {
@@ -232,7 +234,7 @@
         "citation": 0.0,
         "actionable": 0.0
       },
-      "latency_s": 20.091,
+      "latency_s": 21.75,
       "error": null
     }
   ]

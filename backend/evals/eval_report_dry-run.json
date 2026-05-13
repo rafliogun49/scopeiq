@@ -1,9 +1,11 @@
 {
   "mode": "dry-run",
+  "timestamp": "2026-05-13T11:25:59Z",
   "total": 10,
   "passed": 10,
   "pass_rate": 1.0,
   "avg_latency_s": 0.0,
+  "acceptance_80pct": true,
   "results": [
     {
       "case_id": "idea-001",

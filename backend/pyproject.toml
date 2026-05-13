@@ -5,7 +5,7 @@ description = "ScopeIQ backend — FastAPI + agents + RAG"
 requires-python = ">=3.11,<3.12"
 dependencies = [
     # Web
-    "fastapi>=0.111",
+    "fastapi[standard]>=0.111",
     "uvicorn[standard]>=0.29",
     "python-multipart>=0.0.9",
     # ORM / DB
