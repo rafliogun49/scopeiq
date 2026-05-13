@@ -1,0 +1,131 @@
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useProject, useDeleteProject } from "@/hooks/useProjects";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+export const Route = createFileRoute("/projects/$projectId/runs/new")({
+  component: StartRunPage,
+});
+
+function StartRunPage() {
+  const { projectId } = useParams();
+  const { data: project, isLoading } = useProject(projectId);
+
+  const startRun = useMutation({
+    mutationFn: () =>
+      api.post("/projects/{projectId}/runs".replace("{projectId}", projectId)),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-2xl px-6 py-10">
+        <Skeleton className="h-8 w-64 mb-8" />
+        <Card className="rounded-[2rem]">
+          <CardContent className="pt-6">
+            <Skeleton className="h-4 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl px-6 py-10">
+      <Card className="rounded-[2rem] border border-slate-200/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
+        <CardHeader>
+          <CardTitle className="font-geist text-2xl font-semibold tracking-tight">
+            Start Research
+          </CardTitle>
+          <CardDescription className="font-satoshi text-slate-600">
+            AI agents will research your idea and generate a report
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <h3 className="font-geist text-sm font-semibold mb-2">Project</h3>
+            <p className="font-satoshi text-slate-600">{project?.name}</p>
+          </div>
+
+          <div>
+            <h3 className="font-geist text-sm font-semibold mb-2">
+              What happens next?
+            </h3>
+            <ul className="space-y-2 font-satoshi text-sm text-slate-600">
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600">1.</span>
+                <span>
+                  <strong>Orchestrator</strong> plans the research strategy
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600">2.</span>
+                <span>
+                  <strong>Scraper agent</strong> fetches competitor websites
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600">3.</span>
+                <span>
+                  <strong>Social agent</strong> mines HN, Stack Exchange for
+                  user complaints
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600">4.</span>
+                <span>
+                  <strong>Synthesizer</strong> writes the final report with
+                  citations
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="rounded-lg bg-slate-50 p-4">
+            <h3 className="font-geist text-sm font-semibold mb-2">Estimated</h3>
+            <div className="grid grid-cols-2 gap-4 font-satoshi text-sm">
+              <div>
+                <span className="text-slate-500">Time:</span>{" "}
+                <span className="font-medium">~5 minutes</span>
+              </div>
+              <div>
+                <span className="text-slate-500">Cost:</span>{" "}
+                <span className="font-medium">~$0.22</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+        <div className="flex justify-between">
+          <Button
+            variant="outline"
+            onClick={() => window.history.back()}
+            className="rounded-xl font-geist"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              startRun.mutate(undefined, {
+                onSuccess: (run: { id: string }) => {
+                  window.location.href = `/projects/${projectId}/runs/${run.id}`;
+                },
+              });
+            }}
+            disabled={startRun.isPending}
+            className="rounded-xl bg-blue-600 font-geist hover:bg-blue-700 active:scale-[0.98] transition-transform"
+          >
+            {startRun.isPending ? "Starting..." : "Start Research"}
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}

@@ -182,6 +182,11 @@ See `PRD.md §23` and `deploy/setup-vps.sh` for full VPS setup.
 - **Backend:** Ruff linting (E, F, I, UP, B, SIM), MyPy type checking, 100 char line length
 - **Frontend:** ESLint (React hooks, refresh), TypeScript strict mode, Prettier formatting
 
+### Git Workflow
+- Branch protection on `main`: requires PR + 1 approval + CI green
+- `develop` branch for integration
+- Commit prefix convention: `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `ci:`
+
 ### AI Agent Design (Taste Skills)
 
 This project uses [Taste Skill](https://www.tasteskill.dev/) — an anti-slop frontend framework for AI agents — to ensure premium, non-generic UI output.
