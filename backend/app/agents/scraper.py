@@ -8,6 +8,9 @@ the openai-agents SDK accumulates every tool result into conversation history,
 so returning raw HTML (~50–200KB/page) blew the context window after a few
 fetches. The full extracted text is still captured in raw_docs_var for the
 downstream index_chunks() call; the LLM only needs to know fetches succeeded.
+
+Prompt is fetched from Langfuse (name: "scopeiq-scraper") at run time,
+falling back to prompts/scraper.md when Langfuse is not configured.
 """
 from __future__ import annotations
 
@@ -75,9 +78,18 @@ async def discover_urls_tool(domain: str) -> list[str]:
 
 
 _PROMPT_PATH = Path(__file__).resolve().parent.parent.parent / "prompts" / "scraper.md"
+_LOCAL_PROMPT = _PROMPT_PATH.read_text(encoding="utf-8") if _PROMPT_PATH.exists() else ""
+
+
+def _scraper_instructions(context: Any, agent: Any) -> str:
+    from app.core.observability import get_client
+
+    return get_client().get_prompt("scopeiq-scraper", fallback=_LOCAL_PROMPT)
+
+
 scraper_agent = Agent(
     name="Scraper",
     model="gpt-4o-mini",
-    instructions=_PROMPT_PATH.read_text(encoding="utf-8") if _PROMPT_PATH.exists() else "",
+    instructions=_scraper_instructions,
     tools=[discover_urls_tool, http_fetch_tool],
 )

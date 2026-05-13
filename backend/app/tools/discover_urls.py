@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
+from app.core.observability import observe
 from app.tools.extract_text import extract_text
 from app.tools.http_fetch import http_fetch
 from app.workers.run_events import emit_event
@@ -30,6 +31,7 @@ def _registrable(host: str) -> str:
     return ".".join(parts[-2:]) if len(parts) >= 2 else parts[0]
 
 
+@observe(as_type="tool", capture_input=True, capture_output=False)
 async def discover_urls(domain: str) -> list[str]:
     """Return up to 5 URLs from `domain`'s root that look like landing/pricing/about pages."""
     root = _normalize_root(domain)

@@ -14,6 +14,7 @@ from urllib.robotparser import RobotFileParser
 import httpx
 
 from app.core.config import settings
+from app.core.observability import observe
 from app.core.retry import async_retry
 from app.workers.budget import BudgetExceeded, get_budget
 from app.workers.run_events import emit_event
@@ -59,6 +60,7 @@ async def _fetch_robots(client: httpx.AsyncClient, scheme: str, host: str) -> Ro
     return rp
 
 
+@observe(as_type="tool", capture_input=True, capture_output=False)
 async def http_fetch(url: str, render_js: bool = False) -> dict[str, Any]:
     """Fetch a URL respecting robots.txt and per-host rate limits.
 
