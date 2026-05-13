@@ -12,6 +12,7 @@ from typing import Any
 from uuid import UUID
 
 from app.agents.scraper import SourceType, current_competitor_var, raw_docs_var
+from app.core.observability import get_client, observe
 from app.models.project import Project
 from app.schemas.rag import RawDoc
 from app.tools.discover_urls import discover_urls
@@ -51,6 +52,7 @@ def _estimate_tokens(text: str, model: str = "gpt-4o-mini") -> int:
         return max(1, len(text.split()))
 
 
+@observe(name="orchestrator_stub", as_type="agent")
 async def _run_stub(project: Project) -> list[RawDoc]:
     docs: list[RawDoc] = []
     raw_docs_var.set(docs)
@@ -103,10 +105,19 @@ async def _run_stub(project: Project) -> list[RawDoc]:
                 "cost_usd": round(budget.cost_usd, 6),
             }
         )
+        get_client().update_current_span(
+            metadata={
+                "tokens_in": budget.input_tokens,
+                "tokens_out": budget.output_tokens,
+                "cost_usd": round(budget.cost_usd, 6),
+                "docs_scraped": len(docs),
+            }
+        )
     emit_event("agent_finished", agent="orchestrator", payload=budget_payload)
     return docs
 
 
+@observe(name="orchestrator_real", as_type="agent")
 async def _run_real(project: Project) -> list[RawDoc]:
     from agents import AgentHooks, Runner
 
@@ -163,9 +174,19 @@ async def _run_real(project: Project) -> list[RawDoc]:
         "competitor, then http_fetch + extract_text on the URLs it returns."
     )
     await Runner.run(orchestrator_agent, input=prompt, max_turns=settings.MAX_AGENT_TURNS)
+    if budget is not None:
+        get_client().update_current_span(
+            metadata={
+                "tokens_in": budget.input_tokens,
+                "tokens_out": budget.output_tokens,
+                "cost_usd": round(budget.cost_usd, 6),
+                "docs_scraped": len(docs),
+            }
+        )
     return docs
 
 
+@observe(name="run_orchestrator", as_type="agent")
 async def run_orchestrator(run_id: UUID, project: Project) -> list[RawDoc]:
     """Drive the agent pipeline for `project`, returning the scraped RawDocs."""
     run_id_var.set(run_id)

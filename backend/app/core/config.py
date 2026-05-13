@@ -53,7 +53,7 @@ settings = Settings()
 # (openai, openai-agents, tavily) read their keys directly from `os.environ`.
 # Mirror the relevant secrets so they're visible to those libraries without
 # requiring callers to use `uv run --env-file`.
-for _name in ("OPENAI_API_KEY", "TAVILY_API_KEY"):
+for _name in ("OPENAI_API_KEY", "TAVILY_API_KEY", "LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST"):
     _value = getattr(settings, _name, "")
     if _value and not os.environ.get(_name):
         os.environ[_name] = _value

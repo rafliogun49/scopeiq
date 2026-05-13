@@ -8,6 +8,7 @@ from uuid import UUID
 from sqlmodel import Session
 
 from app.core.db import engine
+from app.core.observability import get_client
 from app.models.project import Project
 from app.models.run import Run, RunEvent
 from app.workers.budget import BudgetExceeded, RunBudget, budget_var
@@ -37,7 +38,18 @@ def run_research_task(self, run_id: str) -> dict:
         budget = RunBudget.from_settings()
         budget_var.set(budget)
 
+        # Create a Langfuse span for this run. Using start_observation (not
+        # start_as_current_observation) so no OTEL context is attached — avoids
+        # context-propagation interference with asyncio.run() and tests.
+        lf = get_client()
+        lf_span = lf.start_observation(
+            as_type="agent",
+            name="research_run",
+            metadata={"run_id": run_id},
+        )
+
         try:
+            print(f"[DEBUG] task starting, budget max_input={budget.max_input_tokens}")
             run.status = "running"
             run.started_at = datetime.now(UTC)
             session.add(run)
@@ -102,11 +114,21 @@ def run_research_task(self, run_id: str) -> dict:
             run.token_input = budget.input_tokens
             run.token_output = budget.output_tokens
             run.cost_usd = budget.cost_usd
+            lf_span.update(
+                metadata={
+                    "status": "completed",
+                    "tokens_in": budget.input_tokens,
+                    "tokens_out": budget.output_tokens,
+                    "cost_usd": round(budget.cost_usd, 6),
+                }
+            )
             session.add(run)
             session.commit()
+            lf_span.end()
             return {"run_id": run_id, "status": "completed"}
 
         except BudgetExceeded as exc:
+            print(f"[DEBUG] BudgetExceeded caught: {exc}")
             session.rollback()
             run = session.get(Run, run_uuid)
             if run is not None:
@@ -125,8 +147,18 @@ def run_research_task(self, run_id: str) -> dict:
                 run.token_input = budget.input_tokens
                 run.token_output = budget.output_tokens
                 run.cost_usd = budget.cost_usd
+                lf_span.update(
+                    metadata={
+                        "status": "failed",
+                        "reason": "budget_exceeded",
+                        "cap": exc.reason,
+                        "tokens_in": budget.input_tokens,
+                        "tokens_out": budget.output_tokens,
+                    }
+                )
                 session.add(run)
                 session.commit()
+            lf_span.end()
             return {"run_id": run_id, "status": "failed"}
 
         except Exception as exc:
@@ -147,6 +179,8 @@ def run_research_task(self, run_id: str) -> dict:
                 run.token_input = budget.input_tokens
                 run.token_output = budget.output_tokens
                 run.cost_usd = budget.cost_usd
+                lf_span.update(metadata={"status": "failed", "error": str(exc)[:500]})
                 session.add(run)
                 session.commit()
+            lf_span.end()
             return {"run_id": run_id, "status": "failed"}
