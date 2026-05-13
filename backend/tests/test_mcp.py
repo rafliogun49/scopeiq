@@ -1,5 +1,5 @@
 """MCP smoke test — B-PR2.
-Acceptance: python_exec menghasilkan valid base64 PNG.
+Acceptance: python_exec menghasilkan valid base64 PNG dari matplotlib.
 """
 
 import base64
@@ -13,6 +13,8 @@ from mcp_server.python_exec import python_exec
 async def test_python_exec_returns_png():
     """python_exec dengan matplotlib harus return base64 PNG."""
     code = """
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 competitors = ['Tool A', 'Tool B', 'Tool C']
@@ -26,21 +28,20 @@ plt.savefig('chart.png')
 """
     result = await python_exec(code=code, dataset_id="{}")
 
-    # Harus ada key charts
+    # Harus return dict dengan key charts
+    assert isinstance(result, dict), "Result harus berupa dict"
     assert "charts" in result, "Result harus punya key 'charts'"
-
-    # Harus ada minimal 1 chart
     assert len(result["charts"]) >= 1, "Harus ada minimal 1 chart PNG"
 
-    # Harus valid base64
+    # Validasi base64
     chart_b64 = result["charts"][0]
-    try:
-        decoded = base64.b64decode(chart_b64)
-        assert len(decoded) > 0, "Base64 PNG tidak boleh kosong"
-    except Exception:
-        pytest.fail("Chart bukan valid base64 string")
+    decoded = base64.b64decode(chart_b64)
+    assert len(decoded) > 0, "PNG tidak boleh kosong"
 
-    print(f"✅ PNG size: {len(decoded)} bytes")
+    # Validasi PNG header (magic bytes: \x89PNG)
+    assert decoded[:4] == b"\x89PNG", "File harus valid PNG"
+
+    print(f"✅ PNG valid — size: {len(decoded)} bytes")
 
 
 @pytest.mark.asyncio
@@ -49,3 +50,4 @@ async def test_python_exec_stdout():
     code = "print('hello from sandbox')"
     result = await python_exec(code=code, dataset_id="{}")
     assert "hello from sandbox" in result.get("stdout", "")
+    print("✅ stdout captured correctly")

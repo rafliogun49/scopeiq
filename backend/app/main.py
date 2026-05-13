@@ -1,8 +1,14 @@
+import pathlib
+
+from dotenv import load_dotenv
+
+load_dotenv(pathlib.Path(__file__).parent.parent.parent / ".env")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api import auth, chat, projects, runs
 from app.core.config import settings
-from app.api import auth, projects, runs, chat
 
 app = FastAPI(title="ScopeIQ API", version="0.1.0")
 

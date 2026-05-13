@@ -1,6 +1,7 @@
 """Synthesizer agent — B-PR4."""
 
 import json
+import logging
 import pathlib
 from uuid import UUID
 
@@ -16,13 +17,15 @@ from langfuse import Langfuse
 from app.rag.retrieval import query as _rag_query
 from mcp_server.python_exec import python_exec as _python_exec
 
-load_dotenv(pathlib.Path(__file__).parent.parent.parent.parent / ".env")
+load_dotenv(pathlib.Path(__file__).parent.parent.parent / ".env")
 
 # Load prompt
 _PROMPT = (pathlib.Path(__file__).parent.parent.parent / "prompts" / "synthesizer.md").read_text()
 
 # Langfuse client
 _langfuse = Langfuse()
+
+logger = logging.getLogger(__name__)
 
 
 # ── Function Tools ────────────────────────────────────────────────────────────
@@ -114,12 +117,55 @@ def _report_valid(report: str) -> bool:
     return word_count >= 800 and all([has_s1, has_s2, has_s3, has_s4])
 
 
+# ── DB persist helper ─────────────────────────────────────────────────────────
+
+
+async def _save_report_to_db(run_id: str, report_md: str) -> None:
+    """
+    Simpan report_md ke Run row di database menggunakan sync Session
+    yang dijalankan di thread pool (non-blocking).
+    Non-fatal: jika run_id dummy atau DB error, hanya log warning.
+    """
+    import asyncio
+
+    def _sync_save() -> None:
+        from sqlmodel import Session, select
+
+        from app.core.db import engine
+        from app.models.run import Run
+
+        with Session(engine) as session:
+            statement = select(Run).where(Run.id == UUID(run_id))
+            run = session.exec(statement).first()
+
+            if run:
+                run.report_md = report_md
+                run.status = "completed"
+                session.add(run)
+                session.commit()
+                logger.info(
+                    "report_md saved to DB for run_id=%s (%d words)",
+                    run_id,
+                    len(report_md.split()),
+                )
+            else:
+                logger.warning("Run not found in DB for run_id=%s — skipping DB save", run_id)
+
+    try:
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _sync_save)
+    except Exception as e:
+        logger.warning("Failed to save report_md for run_id=%s: %s", run_id, e)
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 
 async def run_synthesizer(run_id: str, idea: str) -> str:
     """
     Entry point dipanggil oleh Orchestrator.
+    - Generate 4-section Markdown report via gpt-4o
+    - Simpan ke Run.report_md di database (non-fatal jika run_id dummy)
     - Langfuse tracing via start_as_current_observation (v4 API)
     - Retry hingga 3x jika output tidak valid (word count < 800 atau seksi hilang)
     - temperature=0 pada agent untuk hasil yang konsisten
@@ -143,7 +189,7 @@ IMPORTANT: Each section MUST be at least 200 words. Total MUST exceed 900 words.
         report = ""
 
         for attempt in range(3):  # max 3 attempts
-            result = await Runner.run(synthesizer_agent, input=prompt)
+            result = await Runner.run(synthesizer_agent, input=prompt, max_turns=30)
             report = result.final_output or ""
 
             if _report_valid(report):
@@ -165,6 +211,10 @@ IMPORTANT: Each section MUST be at least 200 words. Total MUST exceed 900 words.
                     "3. Total must exceed 900 words\n"
                     "Start your response directly with the first section header."
                 )
+
+        # ── Simpan ke DB (B-PR4 requirement: Run.report_md) ──────────────────
+        # Non-fatal: jika run_id dummy atau DB tidak ada, hanya log warning
+        await _save_report_to_db(run_id=run_id, report_md=report)
 
         _langfuse.set_current_trace_io(
             input={"idea": idea, "run_id": run_id},

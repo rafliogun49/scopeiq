@@ -72,7 +72,6 @@ def run_assertions(case: EvalCase, report: str) -> dict[str, bool]:
     report_lower = report.lower()
 
     # 1. 4 seksi wajib ada — lenient matching untuk variasi heading synthesizer
-    # FIX: tambah alias heading agar tidak gagal karena variasi kata
     checks["has_section_market"] = any(
         x in report_lower
         for x in [
@@ -244,8 +243,8 @@ focused, indie-friendly entrants.
 Wave (free tier with transaction fees), FreshBooks ($15/month),
 QuickBooks ($30/month), Invoice2go ($5.99/month).
 
-**Scheduling:** Calendly ($8–16/user/month), Cal.com (free open-source, $12 cloud),
-SimplyBook.me ($9.90–59.90/month).
+**Scheduling:** Calendly ($8-16/user/month), Cal.com (free open-source, $12 cloud),
+SimplyBook.me ($9.90-59.90/month).
 
 **Knowledge Management:** Notion ($8/user/month Plus tier), Roam Research
 ($15/month), Obsidian (free personal, $8/month Sync add-on).
@@ -260,7 +259,7 @@ Checkly ($30/month).
 $50/month cloud), Appsmith (free open-source, $40/month cloud).
 
 **Subscription Management:** Chargebee ($299/month), Recurly ($149/month),
-Stripe Billing (0.5–0.8% revenue share).
+Stripe Billing (0.5-0.8% revenue share).
 
 **AI Writing:** Jasper ($49/month), Copy.ai ($36/month), Writesonic ($19/month).
 
@@ -287,7 +286,7 @@ users report sync issues and sluggish performance on large databases
 add-on has had reliability complaints [source: https://forum.obsidian.md].
 
 **Support** response times are poor across most SMB-focused tools. Users on
-G2 and Trustpilot consistently rate support 2–3 stars [source: https://trustpilot.com/review/expensify.com].
+G2 and Trustpilot consistently rate support 2-3 stars [source: https://trustpilot.com/review/expensify.com].
 
 **Missing features** frustrate power users. Calendly lacks round-robin availability
 for solo users [source: https://softwarerecs.stackexchange.com]. Notion lacks
@@ -298,7 +297,7 @@ worry about granting Superhuman and SaneBox access to their full inbox
 [source: https://news.ycombinator.com/item?id=29382910].
 
 **Complexity** and alerting fatigue plague developer monitoring tools. Datadog
-is described as "too complex and too expensive for a 3-person startup"
+is described as too complex and too expensive for a 3-person startup
 [source: https://news.ycombinator.com/item?id=34567890].
 
 **Self-hosting and performance** are key pain points for no-code tools. Retool
@@ -310,12 +309,12 @@ and Recurly both lack predictive churn scoring out of the box
 [source: https://g2.com/chargebee/reviews].
 
 **Quality and originality** are the top complaints for AI writing tools. Jasper
-and Copy.ai output is described as "generic and repetitive" by marketing
+and Copy.ai output is described as generic and repetitive by marketing
 professionals who use them daily [source: https://g2.com/jasper-ai/reviews].
 
 **Analytics and scheduling** flexibility are lacking in social scheduling tools.
 Buffer's analytics tier requires a $120/month upgrade; Hootsuite is described
-as "overpriced for what it does" for solopreneurs with under 5 accounts
+as overpriced for what it does for solopreneurs with under 5 accounts
 [source: https://producthunt.com/discussions/hootsuite-alternatives].
 
 ## Where's the Gap?
@@ -324,23 +323,20 @@ The evidence points to a consistent, cross-vertical opportunity: tools built
 for teams are being used by solopreneurs and freelancers who are forced to
 pay enterprise pricing and navigate enterprise-grade UX complexity.
 
-The most defensible differentiator is a **solo-first design philosophy** paired
+The most defensible differentiator is a solo-first design philosophy paired
 with transparent, usage-based pricing and a mobile-native experience.
 
 The ideal customer profile is an indie founder, freelancer, or solopreneur
-with 1–5 clients, earning $3,000–$15,000/month, who needs professional-grade
+with 1-5 clients, earning $3,000-$15,000/month, who needs professional-grade
 tooling without the overhead of enterprise software.
 
 Concrete product bets:
-1. Price at $9–15/month flat with no per-seat pricing — the solo user does not
-   scale linearly and resents seat-based models.
-2. Build mobile-first, not mobile-responsive — the solopreneur works from their
-   phone more than their laptop.
-3. Integrate natively with the 3 tools every freelancer already uses:
-   Stripe, Notion, and Google Calendar — reducing setup friction to under 5 minutes.
+1. Price at $9-15/month flat with no per-seat pricing.
+2. Build mobile-first, not mobile-responsive.
+3. Integrate natively with Stripe, Notion, and Google Calendar.
 
 The gap is wide open. No current player has successfully positioned as the
-"solo founder's operating system" across expense, scheduling, and invoicing.
+solo founder's operating system across expense, scheduling, and invoicing.
 The first product to do this with a clean UX and fair pricing will have
 a significant first-mover advantage in an underserved but lucrative segment.
 """
@@ -380,7 +376,6 @@ async def run_full(cases: list[EvalCase]) -> list[EvalResult]:
         print(f"  Running: {case.id} — {case.idea[:50]}...")
         start = time.time()
         try:
-            # Pass known_competitors agar synthesizer tahu siapa yang harus di-research
             idea_with_context = (
                 f"{case.idea}. "
                 f"You MUST research and mention these specific competitors by name: "
@@ -388,14 +383,14 @@ async def run_full(cases: list[EvalCase]) -> list[EvalResult]:
             )
             report = await run_synthesizer(
                 run_id="00000000-0000-0000-0000-000000000001",
-                idea=idea_with_context,  # ← FIX: pakai idea_with_context bukan case.idea
+                idea=idea_with_context,
             )
             latency = time.time() - start
             checks = run_assertions(case, report)
             scores = await llm_judge(case.idea, report)
 
-            # FIX: passed hanya berdasarkan structural checks
-            # LLM score 0.0 karena dummy run_id (no real corpus), bukan bug report
+            # passed hanya berdasarkan structural checks
+            # LLM score informatif saja — dummy run_id tidak punya real corpus
             passed = all(checks.values())
 
             results.append(
@@ -455,21 +450,29 @@ def print_report(results: list[EvalResult], mode: str) -> None:
     print(f"  ACCEPTANCE  : >= 80% ({'PASS ✅' if pass_rate >= 0.8 else 'FAIL ❌'})")
     print(f"{'=' * 60}\n")
 
-    # ── JSON Export ───────────────────────────────────────────────────────────────
+
+# ── JSON Export ───────────────────────────────────────────────────────────────
+# FIX: fungsi ini harus di luar print_report — sebelumnya komentar
+# terjebak di dalam print_report karena indentasi yang salah.
 
 
 def save_json_report(results: list[EvalResult], mode: str) -> pathlib.Path:
-    """Simpan hasil eval ke JSON file. Acceptance B-PR5."""
+    """
+    Simpan hasil eval ke JSON file.
+    B-PR5 acceptance: 'produces a JSON report' (TEAM_SPLIT.md line 168)
+    """
     passed = sum(1 for r in results if r.passed)
     pass_rate = passed / len(results) if results else 0
     avg_latency = sum(r.latency_s for r in results) / len(results) if results else 0
 
-    report = {
+    report_data = {
         "mode": mode,
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "total": len(results),
         "passed": passed,
         "pass_rate": round(pass_rate, 2),
         "avg_latency_s": round(avg_latency, 2),
+        "acceptance_80pct": pass_rate >= 0.8,
         "results": [
             {
                 "case_id": r.case_id,
@@ -485,7 +488,7 @@ def save_json_report(results: list[EvalResult], mode: str) -> pathlib.Path:
     }
 
     output_path = pathlib.Path(__file__).parent / f"eval_report_{mode}.json"
-    output_path.write_text(json.dumps(report, indent=2))
+    output_path.write_text(json.dumps(report_data, indent=2, ensure_ascii=False))
     print(f"JSON report saved → {output_path}")
     return output_path
 
@@ -510,7 +513,6 @@ def main() -> None:
         results = run_dry(cases)
         print_report(results, mode="dry-run")
         save_json_report(results, mode="dry-run")
-
     else:
         import asyncio
 
