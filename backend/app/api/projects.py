@@ -1,4 +1,5 @@
 """Projects endpoints — implemented in A-PR3."""
+
 from fastapi import APIRouter
 
 router = APIRouter()
