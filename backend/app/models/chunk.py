@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from pgvector.sqlalchemy import Vector
@@ -14,4 +14,4 @@ class Chunk(SQLModel, table=True):
     competitor: str | None = None
     text: str
     embedding: list[float] = Field(sa_column=Column(Vector(1536)))
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
