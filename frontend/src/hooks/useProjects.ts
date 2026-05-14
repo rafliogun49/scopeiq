@@ -32,6 +32,7 @@ export function useCreateProject() {
     mutationFn: (data: { name: string; idea: string; known_competitors?: string[] }) =>
       api.post<Project>("/projects", data),
     onSuccess: () => {
+      // Invalidate projects list so it refreshes
       queryClient.invalidateQueries({ queryKey: qk.projects() });
     },
   });
@@ -43,6 +44,7 @@ export function useDeleteProject() {
   return useMutation({
     mutationFn: (id: string) => api.delete(`/projects/${id}`),
     onSuccess: () => {
+      // Invalidate projects list so it refreshes
       queryClient.invalidateQueries({ queryKey: qk.projects() });
     },
   });

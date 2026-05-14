@@ -1,4 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useRouterState,
+} from "@tanstack/react-router";
 import { useProjects } from "@/hooks/useProjects";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -15,6 +20,18 @@ export const Route = createFileRoute("/projects")({
 });
 
 function ProjectsPage() {
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+
+  if (pathname !== "/projects") {
+    return <Outlet />;
+  }
+
+  return <ProjectsIndexPage />;
+}
+
+function ProjectsIndexPage() {
   const { data: projects, isLoading } = useProjects();
 
   if (isLoading) {

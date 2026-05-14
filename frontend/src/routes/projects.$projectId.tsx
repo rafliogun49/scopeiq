@@ -1,4 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useRouterState,
+} from "@tanstack/react-router";
 import { useProject, useDeleteProject } from "@/hooks/useProjects";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -16,6 +21,18 @@ export const Route = createFileRoute("/projects/$projectId")({
 
 function ProjectDetailPage() {
   const { projectId } = Route.useParams();
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+
+  if (pathname !== `/projects/${projectId}`) {
+    return <Outlet />;
+  }
+
+  return <ProjectDetailContent projectId={projectId} />;
+}
+
+function ProjectDetailContent({ projectId }: { projectId: string }) {
   const { data: project, isLoading } = useProject(projectId);
   const deleteProject = useDeleteProject();
 
