@@ -86,9 +86,7 @@ def test_get_run_404_for_other_user(client: TestClient, auth_headers):
     alice = auth_headers("alice@example.com")
     bob = auth_headers("bob@example.com")
     project_id = _make_project(client, bob)
-    run_id = client.post(
-        f"/api/v1/projects/{project_id}/runs", headers=bob
-    ).json()["run_id"]
+    run_id = client.post(f"/api/v1/projects/{project_id}/runs", headers=bob).json()["run_id"]
 
     assert client.get(f"/api/v1/runs/{run_id}", headers=alice).status_code == 404
 
@@ -96,9 +94,7 @@ def test_get_run_404_for_other_user(client: TestClient, auth_headers):
 def test_cancel_completed_run_returns_409(client: TestClient, auth_headers):
     headers = auth_headers()
     project_id = _make_project(client, headers)
-    run_id = client.post(
-        f"/api/v1/projects/{project_id}/runs", headers=headers
-    ).json()["run_id"]
+    run_id = client.post(f"/api/v1/projects/{project_id}/runs", headers=headers).json()["run_id"]
 
     r = client.post(f"/api/v1/runs/{run_id}/cancel", headers=headers)
     assert r.status_code == 409
@@ -117,9 +113,7 @@ def test_cancel_pending_run_flips_status(client: TestClient, auth_headers, monke
 
     headers = auth_headers()
     project_id = _make_project(client, headers)
-    run_id = client.post(
-        f"/api/v1/projects/{project_id}/runs", headers=headers
-    ).json()["run_id"]
+    run_id = client.post(f"/api/v1/projects/{project_id}/runs", headers=headers).json()["run_id"]
 
     r = client.post(f"/api/v1/runs/{run_id}/cancel", headers=headers)
     assert r.status_code == 200, r.text
@@ -132,9 +126,7 @@ def test_cancel_pending_run_flips_status(client: TestClient, auth_headers, monke
 def test_events_emits_real_sequence(client: TestClient, auth_headers):
     headers = auth_headers()
     project_id = _make_project(client, headers)
-    run_id = client.post(
-        f"/api/v1/projects/{project_id}/runs", headers=headers
-    ).json()["run_id"]
+    run_id = client.post(f"/api/v1/projects/{project_id}/runs", headers=headers).json()["run_id"]
 
     r = client.get(f"/api/v1/runs/{run_id}/events", headers=headers)
     assert r.status_code == 200
@@ -167,15 +159,11 @@ def test_events_emits_real_sequence(client: TestClient, auth_headers):
 def test_events_pagination_respects_limit(client: TestClient, auth_headers):
     headers = auth_headers()
     project_id = _make_project(client, headers)
-    run_id = client.post(
-        f"/api/v1/projects/{project_id}/runs", headers=headers
-    ).json()["run_id"]
+    run_id = client.post(f"/api/v1/projects/{project_id}/runs", headers=headers).json()["run_id"]
 
     # Event sequence: plan(0), log/caps(1), agent_started/orchestrator(2), ...
     # Use offset=2 to land on orchestrator's agent_started.
-    r = client.get(
-        f"/api/v1/runs/{run_id}/events?offset=2&limit=1", headers=headers
-    )
+    r = client.get(f"/api/v1/runs/{run_id}/events?offset=2&limit=1", headers=headers)
     assert r.status_code == 200
     body = r.json()
     assert len(body) == 1
@@ -187,9 +175,7 @@ def test_events_404_for_other_user(client: TestClient, auth_headers):
     alice = auth_headers("alice@example.com")
     bob = auth_headers("bob@example.com")
     project_id = _make_project(client, bob)
-    run_id = client.post(
-        f"/api/v1/projects/{project_id}/runs", headers=bob
-    ).json()["run_id"]
+    run_id = client.post(f"/api/v1/projects/{project_id}/runs", headers=bob).json()["run_id"]
 
     assert client.get(f"/api/v1/runs/{run_id}/events", headers=alice).status_code == 404
 
@@ -199,7 +185,9 @@ def test_get_run_unknown_id_returns_404(client: TestClient, auth_headers):
     assert client.get(f"/api/v1/runs/{uuid4()}", headers=headers).status_code == 404
 
 
-def test_index_chunks_not_implemented_still_completes(client: TestClient, auth_headers, monkeypatch):
+def test_index_chunks_not_implemented_still_completes(
+    client: TestClient, auth_headers, monkeypatch
+):
     """If B-PR1 hasn't landed, the run should still complete with a log warning."""
     from app.rag import index as index_module
 
@@ -210,9 +198,7 @@ def test_index_chunks_not_implemented_still_completes(client: TestClient, auth_h
 
     headers = auth_headers()
     project_id = _make_project(client, headers)
-    run_id = client.post(
-        f"/api/v1/projects/{project_id}/runs", headers=headers
-    ).json()["run_id"]
+    run_id = client.post(f"/api/v1/projects/{project_id}/runs", headers=headers).json()["run_id"]
 
     run = client.get(f"/api/v1/runs/{run_id}", headers=headers).json()
     assert run["status"] == "completed"

@@ -1,8 +1,9 @@
 """Unit tests for async_retry — A-PR5."""
+
 from __future__ import annotations
 
-import pytest
 import httpx
+import pytest
 
 from app.core.retry import async_retry
 

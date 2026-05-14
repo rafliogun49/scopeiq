@@ -12,6 +12,7 @@ downstream index_chunks() call; the LLM only needs to know fetches succeeded.
 Prompt is fetched from Langfuse (name: "scopeiq-scraper") at run time,
 falling back to prompts/scraper.md when Langfuse is not configured.
 """
+
 from __future__ import annotations
 
 from contextvars import ContextVar
@@ -32,7 +33,9 @@ SourceType = Literal["landing", "pricing", "review_snippet", "community", "hn", 
 raw_docs_var: ContextVar[list[RawDoc] | None] = ContextVar("scopeiq_raw_docs", default=None)
 # Tracks the competitor whose URLs we are currently scraping so RawDocs can be
 # attributed correctly without the LLM passing it through.
-current_competitor_var: ContextVar[str | None] = ContextVar("scopeiq_current_competitor", default=None)
+current_competitor_var: ContextVar[str | None] = ContextVar(
+    "scopeiq_current_competitor", default=None
+)
 
 
 def _classify(url: str) -> SourceType:

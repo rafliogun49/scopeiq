@@ -3,6 +3,7 @@
 Uses trafilatura for clean article extraction; lxml for link enumeration.
 See PRD §10.3.
 """
+
 from __future__ import annotations
 
 from typing import Any

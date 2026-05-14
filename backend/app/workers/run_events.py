@@ -3,6 +3,7 @@
 Tools and the agent runner use a contextvar-bound run_id so they can insert
 RunEvent rows without threading session/run_id through their signatures.
 """
+
 from __future__ import annotations
 
 from contextvars import ContextVar

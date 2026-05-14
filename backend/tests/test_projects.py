@@ -52,9 +52,7 @@ def test_get_project_includes_last_run_summary_or_none(client: TestClient, auth_
     assert r.status_code == 200, r.text
     assert r.json()["last_run"] is None
 
-    run = client.post(
-        f"/api/v1/projects/{project['id']}/runs", headers=headers
-    ).json()
+    run = client.post(f"/api/v1/projects/{project['id']}/runs", headers=headers).json()
 
     r = client.get(f"/api/v1/projects/{project['id']}", headers=headers)
     body = r.json()
@@ -74,9 +72,7 @@ def test_get_other_users_project_returns_404(client: TestClient, auth_headers):
 
 def test_get_missing_project_returns_404(client: TestClient, auth_headers):
     headers = auth_headers()
-    r = client.get(
-        "/api/v1/projects/00000000-0000-0000-0000-000000000000", headers=headers
-    )
+    r = client.get("/api/v1/projects/00000000-0000-0000-0000-000000000000", headers=headers)
     assert r.status_code == 404
 
 
@@ -111,9 +107,7 @@ def test_patch_other_users_project_returns_404(client: TestClient, auth_headers)
 def test_delete_cascades_runs_and_events(client: TestClient, auth_headers):
     headers = auth_headers()
     project = _create(client, headers)
-    run = client.post(
-        f"/api/v1/projects/{project['id']}/runs", headers=headers
-    ).json()
+    run = client.post(f"/api/v1/projects/{project['id']}/runs", headers=headers).json()
     run_id = run["run_id"]
 
     r = client.delete(f"/api/v1/projects/{project['id']}", headers=headers)

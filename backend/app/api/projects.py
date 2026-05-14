@@ -1,4 +1,5 @@
 """Projects endpoints — implemented in A-PR3."""
+
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Response, status

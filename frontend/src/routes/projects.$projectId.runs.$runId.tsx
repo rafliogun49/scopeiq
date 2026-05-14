@@ -1,8 +1,4 @@
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useRunStream } from "@/hooks/useRunStream";
 import { useProject } from "@/hooks/useProjects";
 import { Button } from "@/components/ui/button";
@@ -19,15 +15,10 @@ export const Route = createFileRoute("/projects/$projectId/runs/$runId")({
 });
 
 function RunProgressPage() {
-  const { projectId, runId } = useParams();
+  const { projectId, runId } = Route.useParams();
   const navigate = useNavigate();
   const { data: project } = useProject(projectId);
   const { events, status, error, isComplete } = useRunStream(runId);
-
-  // Calculate cumulative stats from events
-  const costUsd = 0.0; // TODO: Get from backend events
-  const tokenInput = 0;
-  const tokenOutput = 0;
 
   const getStatusColor = () => {
     switch (status) {
@@ -79,6 +70,11 @@ function RunProgressPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
+            <Link to="/projects/$projectId" params={{ projectId }}>
+              <Button variant="outline" className="rounded-xl font-geist mb-4">
+                ← Back to Project
+              </Button>
+            </Link>
             <h1 className="font-geist text-2xl font-semibold tracking-tight">
               Research in Progress
             </h1>
@@ -88,11 +84,9 @@ function RunProgressPage() {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <div className="font-geist text-sm font-medium">
-                ${costUsd.toFixed(3)}
-              </div>
+              <div className="font-geist text-sm font-medium">$0.00</div>
               <div className="font-satoshi text-xs text-slate-500">
-                ⬆️ {tokenInput} ⬇️ {tokenOutput} tokens
+                Est. ~$0.22 total
               </div>
             </div>
             <span
@@ -199,24 +193,6 @@ function RunProgressPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* Cancel Button */}
-      {!isComplete && (
-        <div className="mt-6 flex justify-center">
-          <Button
-            variant="outline"
-            className="rounded-xl font-geist text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => {
-              if (confirm("Are you sure you want to cancel this run?")) {
-                // TODO: Call cancel API
-                navigate({ to: "/projects/$projectId", params: { projectId } });
-              }
-            }}
-          >
-            Cancel Run
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

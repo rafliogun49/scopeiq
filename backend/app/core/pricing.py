@@ -1,4 +1,5 @@
 """Model pricing table for cost tracking — A-PR5."""
+
 from __future__ import annotations
 
 import logging

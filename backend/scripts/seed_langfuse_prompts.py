@@ -12,6 +12,7 @@ After this, the agents will pull the live versions from Langfuse on every run
 (with a 60-second cache). You can then edit them in the Langfuse UI without
 redeploying.
 """
+
 from __future__ import annotations
 
 import sys

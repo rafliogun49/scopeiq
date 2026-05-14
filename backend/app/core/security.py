@@ -1,4 +1,5 @@
 """Auth helpers — bcrypt + JWT. Implemented in A-PR2."""
+
 from datetime import UTC, datetime, timedelta
 
 from jose import jwt

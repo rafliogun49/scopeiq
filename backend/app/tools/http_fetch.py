@@ -3,6 +3,7 @@
 Fetches a URL with httpx, respects robots.txt, rate-limits per host (1 req/s).
 See PRD §10.3 and §20 NFR-9.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -70,7 +71,11 @@ async def http_fetch(url: str, render_js: bool = False) -> dict[str, Any]:
     # TODO (later PR): Playwright fallback when render_js=True.
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-        emit_event("tool_called", agent="scraper", payload={"tool": "http_fetch", "url": url, "status": 0, "error": "invalid_url"})
+        emit_event(
+            "tool_called",
+            agent="scraper",
+            payload={"tool": "http_fetch", "url": url, "status": 0, "error": "invalid_url"},
+        )
         return {"status": 0, "html": "", "text": "", "error": "invalid_url"}
     host = parsed.netloc
 
@@ -81,7 +86,11 @@ async def http_fetch(url: str, render_js: bool = False) -> dict[str, Any]:
     ) as client:
         rp = await _fetch_robots(client, parsed.scheme, host)
         if not rp.can_fetch(USER_AGENT, url):
-            emit_event("tool_called", agent="scraper", payload={"tool": "http_fetch", "url": url, "status": 0, "skipped": "robots"})
+            emit_event(
+                "tool_called",
+                agent="scraper",
+                payload={"tool": "http_fetch", "url": url, "status": 0, "skipped": "robots"},
+            )
             return {"status": 0, "html": "", "text": "", "skipped": "robots"}
 
         # Record this fetch against the per-run budget before making the request.
@@ -107,11 +116,19 @@ async def http_fetch(url: str, render_js: bool = False) -> dict[str, Any]:
             except Exception as exc:
                 # httpx.HTTPError exhausted all retries or other failure — return error dict.
                 _last_request_at[host] = time.monotonic()
-                emit_event("tool_called", agent="scraper", payload={"tool": "http_fetch", "url": url, "status": 0, "error": str(exc)})
+                emit_event(
+                    "tool_called",
+                    agent="scraper",
+                    payload={"tool": "http_fetch", "url": url, "status": 0, "error": str(exc)},
+                )
                 return {"status": 0, "html": "", "text": "", "error": str(exc)}
             _last_request_at[host] = time.monotonic()
 
-        emit_event("tool_called", agent="scraper", payload={"tool": "http_fetch", "url": url, "status": r.status_code})
+        emit_event(
+            "tool_called",
+            agent="scraper",
+            payload={"tool": "http_fetch", "url": url, "status": r.status_code},
+        )
         if r.status_code >= 400:
             return {"status": r.status_code, "html": "", "text": ""}
         return {"status": r.status_code, "html": r.text, "text": ""}
