@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useForm } from "@tanstack/react-form";
+import { useState } from "react";
 import { api, setToken } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,60 +12,58 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/qk";
 
 export const Route = createFileRoute("/signup")({
   component: SignupPage,
 });
 
-interface SignupForm {
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
 function SignupPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const form = useForm<SignupForm>({
-    defaultValues: {
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-    validators: {
-      onChange: ({ value }) => {
-        const errors: Partial<Record<keyof SignupForm, string>> = {};
-        if (!value.email) {
-          errors.email = "Email is required";
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email)) {
-          errors.email = "Invalid email format";
-        }
-        if (!value.password) {
-          errors.password = "Password is required";
-        } else if (value.password.length < 6) {
-          errors.password = "Password must be at least 6 characters";
-        }
-        if (value.confirmPassword && value.password !== value.confirmPassword) {
-          errors.confirmPassword = "Passwords do not match";
-        }
-        return errors;
-      },
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        const response = await api.post<{ token: string }>("/auth/signup", {
-          email: value.email,
-          password: value.password,
-        });
-        setToken(response.token);
-        navigate({ to: "/" });
-      } catch (error) {
-        form.setErrorMap({
-          form: "Failed to create account. Email may already be in use.",
-        });
-      }
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await api.post<{ access_token: string }>(
+        "/auth/signup",
+        {
+          email,
+          password,
+        },
+      );
+      setToken(response.access_token);
+
+      // Invalidate auth query so useAuth() re-fetches
+      queryClient.invalidateQueries({ queryKey: qk.me() });
+
+      navigate({ to: "/projects" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create account");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4 py-12">
@@ -78,11 +76,11 @@ function SignupPage() {
             Enter your details to get started
           </CardDescription>
         </CardHeader>
-        <form onSubmit={form.handleSubmit}>
+        <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {form.state.errors.form && (
+            {error && (
               <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                {form.state.errors.form}
+                {error}
               </div>
             )}
 
@@ -94,16 +92,10 @@ function SignupPage() {
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                value={form.state.values.email}
-                onChange={(v) => form.setFieldValue("email", v)}
-                onBlur={form.handleBlur}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="rounded-xl"
               />
-              {form.state.fieldMeta.email?.errors && (
-                <p className="text-sm text-red-600">
-                  {form.state.fieldMeta.email.errors.join(", ")}
-                </p>
-              )}
             </div>
 
             <div className="space-y-2">
@@ -117,16 +109,10 @@ function SignupPage() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                value={form.state.values.password}
-                onChange={(v) => form.setFieldValue("password", v)}
-                onBlur={form.handleBlur}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="rounded-xl"
               />
-              {form.state.fieldMeta.password?.errors && (
-                <p className="text-sm text-red-600">
-                  {form.state.fieldMeta.password.errors.join(", ")}
-                </p>
-              )}
             </div>
 
             <div className="space-y-2">
@@ -140,16 +126,10 @@ function SignupPage() {
                 id="confirmPassword"
                 type="password"
                 placeholder="••••••••"
-                value={form.state.values.confirmPassword}
-                onChange={(v) => form.setFieldValue("confirmPassword", v)}
-                onBlur={form.handleBlur}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 className="rounded-xl"
               />
-              {form.state.fieldMeta.confirmPassword?.errors && (
-                <p className="text-sm text-red-600">
-                  {form.state.fieldMeta.confirmPassword.errors.join(", ")}
-                </p>
-              )}
             </div>
           </CardContent>
 
@@ -157,11 +137,9 @@ function SignupPage() {
             <Button
               type="submit"
               className="w-full rounded-xl font-geist font-medium active:scale-[0.98] transition-transform"
-              disabled={form.state.isSubmitting}
+              disabled={loading || !email || !password || !confirmPassword}
             >
-              {form.state.isSubmitting
-                ? "Creating account..."
-                : "Create account"}
+              {loading ? "Creating account..." : "Create account"}
             </Button>
 
             <p className="text-center text-sm text-slate-600">

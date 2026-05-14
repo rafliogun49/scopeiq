@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useForm } from "@tanstack/react-form";
+import { useState } from "react";
 import { api, setToken } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,55 +12,45 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/qk";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-interface LoginForm {
-  email: string;
-  password: string;
-}
-
 function LoginPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const form = useForm<LoginForm>({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-    validators: {
-      onChange: ({ value }) => {
-        const errors: Partial<Record<keyof LoginForm, string>> = {};
-        if (!value.email) {
-          errors.email = "Email is required";
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email)) {
-          errors.email = "Invalid email format";
-        }
-        if (!value.password) {
-          errors.password = "Password is required";
-        } else if (value.password.length < 6) {
-          errors.password = "Password must be at least 6 characters";
-        }
-        return errors;
-      },
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        const response = await api.post<{ token: string }>("/auth/login", {
-          email: value.email,
-          password: value.password,
-        });
-        setToken(response.token);
-        navigate({ to: "/" });
-      } catch (error) {
-        form.setErrorMap({
-          form: "Invalid email or password",
-        });
-      }
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await api.post<{ access_token: string }>("/auth/login", {
+        email,
+        password,
+      });
+      setToken(response.access_token);
+
+      // Invalidate auth query so useAuth() re-fetches
+      queryClient.invalidateQueries({ queryKey: qk.me() });
+
+      navigate({ to: "/projects" });
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Invalid email or password",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4 py-12">
@@ -73,11 +63,11 @@ function LoginPage() {
             Enter your credentials to sign in
           </CardDescription>
         </CardHeader>
-        <form onSubmit={form.handleSubmit}>
+        <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {form.state.errors.form && (
+            {error && (
               <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                {form.state.errors.form}
+                {error}
               </div>
             )}
 
@@ -89,16 +79,10 @@ function LoginPage() {
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                value={form.state.values.email}
-                onChange={(v) => form.setFieldValue("email", v)}
-                onBlur={form.handleBlur}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="rounded-xl"
               />
-              {form.state.fieldMeta.email?.errors && (
-                <p className="text-sm text-red-600">
-                  {form.state.fieldMeta.email.errors.join(", ")}
-                </p>
-              )}
             </div>
 
             <div className="space-y-2">
@@ -112,16 +96,10 @@ function LoginPage() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                value={form.state.values.password}
-                onChange={(v) => form.setFieldValue("password", v)}
-                onBlur={form.handleBlur}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="rounded-xl"
               />
-              {form.state.fieldMeta.password?.errors && (
-                <p className="text-sm text-red-600">
-                  {form.state.fieldMeta.password.errors.join(", ")}
-                </p>
-              )}
             </div>
           </CardContent>
 
@@ -129,9 +107,9 @@ function LoginPage() {
             <Button
               type="submit"
               className="w-full rounded-xl font-geist font-medium active:scale-[0.98] transition-transform"
-              disabled={form.state.isSubmitting}
+              disabled={loading || !email || !password}
             >
-              {form.state.isSubmitting ? "Signing in..." : "Sign in"}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
 
             <p className="text-center text-sm text-slate-600">

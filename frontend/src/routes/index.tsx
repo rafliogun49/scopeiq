@@ -1,19 +1,33 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
 function HomePage() {
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated) {
+        navigate({ to: "/projects" });
+      } else {
+        navigate({ to: "/login" });
+      }
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
   return (
-    <div className="flex flex-col items-center gap-6 py-20 text-center">
-      <h1 className="text-4xl font-bold text-gray-900">ScopeIQ</h1>
-      <p className="max-w-xl text-lg text-gray-500">
-        Should I build this? Get the answer in 5 minutes.
-      </p>
-      <p className="text-sm text-gray-400">
-        Scaffold ready — auth UI coming in C-PR3.
-      </p>
+    <div className="flex min-h-[100dvh] items-center justify-center">
+      <div className="text-center">
+        <h1 className="font-geist text-2xl font-semibold">Loading...</h1>
+        <p className="mt-2 font-satoshi text-slate-600">
+          Redirecting you to the dashboard
+        </p>
+      </div>
     </div>
   );
 }
