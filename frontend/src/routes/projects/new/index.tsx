@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useForm } from "@tanstack/react-form";
+import { useState } from "react";
 import { useCreateProject } from "@/hooks/useProjects";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,59 +14,61 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export const Route = createFileRoute("/projects/new")({
+export const Route = createFileRoute("/projects/new/")({
   component: CreateProjectPage,
 });
 
 function CreateProjectPage() {
   const navigate = useNavigate();
   const createProject = useCreateProject();
+  const [name, setName] = useState("");
+  const [idea, setIdea] = useState("");
+  const [knownCompetitors, setKnownCompetitors] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const form = useForm({
-    defaultValues: {
-      name: "",
-      idea: "",
-      knownCompetitors: "",
-    },
-    validators: {
-      onChange: ({ value }) => {
-        const errors: Partial<Record<keyof typeof value, string>> = {};
-        if (!value.name) {
-          errors.name = "Project name is required";
-        }
-        if (!value.idea) {
-          errors.idea = "Idea description is required";
-        } else if (value.idea.length < 20) {
-          errors.idea = "Please provide at least 20 characters";
-        }
-        return errors;
-      },
-    },
-    onSubmit: async ({ value }) => {
-      const knownCompetitors = value.knownCompetitors
-        ? value.knownCompetitors
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("✅ Form submitted");
+    setError("");
+
+    if (!name) {
+      setError("Project name is required");
+      return;
+    }
+
+    if (!idea || idea.length < 20) {
+      setError("Idea description is required (min 20 characters)");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const competitors = knownCompetitors
+        ? knownCompetitors
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean)
         : [];
 
-      try {
-        const project = await createProject.mutateAsync({
-          name: value.name,
-          idea: value.idea,
-          known_competitors: knownCompetitors,
-        });
-        navigate({
-          to: "/projects/$projectId",
-          params: { projectId: project.id },
-        });
-      } catch (error) {
-        form.setErrorMap({
-          form: "Failed to create project. Please try again.",
-        });
-      }
-    },
-  });
+      const project = await createProject.mutateAsync({
+        name,
+        idea,
+        known_competitors: competitors,
+      });
+
+      navigate({
+        to: "/projects/$projectId",
+        params: { projectId: project.id },
+      });
+    } catch (err) {
+      console.error("❌ Error:", err);
+      setError(err instanceof Error ? err.message : "Failed to create project");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
@@ -79,51 +81,43 @@ function CreateProjectPage() {
             Describe your product idea and we'll research the market
           </CardDescription>
         </CardHeader>
-        <form onSubmit={form.handleSubmit}>
+        <form onSubmit={handleSubmit}>
           <CardContent className="space-y-6">
-            {form.state.errors.form && (
+            {error && (
               <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                {form.state.errors.form}
+                {error}
               </div>
             )}
 
             <div className="space-y-2">
               <Label htmlFor="name" className="font-geist text-sm font-medium">
-                Project Name
+                Project Name *
               </Label>
               <Input
                 id="name"
+                name="name"
+                type="text"
+                autoComplete="off"
                 placeholder="e.g., AI Receipt Scanner"
-                value={form.state.values.name}
-                onChange={(v) => form.setFieldValue("name", v)}
-                onBlur={form.handleBlur}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="rounded-xl"
               />
-              {form.state.fieldMeta.name?.errors && (
-                <p className="text-sm text-red-600">
-                  {form.state.fieldMeta.name.errors.join(", ")}
-                </p>
-              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="idea" className="font-geist text-sm font-medium">
-                Your Idea
+                Your Idea *
               </Label>
               <Textarea
                 id="idea"
-                placeholder="AI-powered receipt scanner for freelancers that automatically categorizes expenses and generates tax reports..."
+                name="idea"
+                placeholder="AI-powered receipt scanner for freelancers..."
                 rows={5}
-                value={form.state.values.idea}
-                onChange={(v) => form.setFieldValue("idea", v)}
-                onBlur={form.handleBlur}
+                value={idea}
+                onChange={(e) => setIdea(e.target.value)}
                 className="rounded-xl resize-none"
               />
-              {form.state.fieldMeta.idea?.errors && (
-                <p className="text-sm text-red-600">
-                  {form.state.fieldMeta.idea.errors.join(", ")}
-                </p>
-              )}
             </div>
 
             <div className="space-y-2">
@@ -135,15 +129,13 @@ function CreateProjectPage() {
               </Label>
               <Input
                 id="knownCompetitors"
-                placeholder="Notion, Evernote, Bear (comma-separated)"
-                value={form.state.values.knownCompetitors}
-                onChange={(v) => form.setFieldValue("knownCompetitors", v)}
-                onBlur={form.handleBlur}
+                name="knownCompetitors"
+                type="text"
+                placeholder="Notion, Evernote, Bear"
+                value={knownCompetitors}
+                onChange={(e) => setKnownCompetitors(e.target.value)}
                 className="rounded-xl"
               />
-              <p className="font-satoshi text-xs text-slate-500">
-                Enter competitor names separated by commas
-              </p>
             </div>
           </CardContent>
 
@@ -158,14 +150,10 @@ function CreateProjectPage() {
             </Button>
             <Button
               type="submit"
-              disabled={
-                form.state.isSubmitting ||
-                !form.state.values.name ||
-                !form.state.values.idea
-              }
+              disabled={loading || !name || !idea}
               className="rounded-xl font-geist active:scale-[0.98] transition-transform"
             >
-              {form.state.isSubmitting ? "Creating..." : "Create Project"}
+              {loading ? "Creating..." : "Create Project"}
             </Button>
           </CardFooter>
         </form>
