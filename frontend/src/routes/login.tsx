@@ -12,6 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/qk";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,14 +33,20 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await api.post<{ token: string }>("/auth/login", {
+      const response = await api.post<{ access_token: string }>("/auth/login", {
         email,
         password,
       });
-      setToken(response.token);
+      setToken(response.access_token);
+
+      // Invalidate auth query so useAuth() re-fetches
+      queryClient.invalidateQueries({ queryKey: qk.me() });
+
       navigate({ to: "/projects" });
     } catch (err) {
-      setError("Invalid email or password");
+      setError(
+        err instanceof Error ? err.message : "Invalid email or password",
+      );
     } finally {
       setLoading(false);
     }

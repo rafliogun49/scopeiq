@@ -12,6 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/qk";
 
 export const Route = createFileRoute("/signup")({
   component: SignupPage,
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/signup")({
 
 function SignupPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,22 +37,29 @@ function SignupPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await api.post<{ token: string }>("/auth/signup", {
-        email,
-        password,
-      });
-      setToken(response.token);
+      const response = await api.post<{ access_token: string }>(
+        "/auth/signup",
+        {
+          email,
+          password,
+        },
+      );
+      setToken(response.access_token);
+
+      // Invalidate auth query so useAuth() re-fetches
+      queryClient.invalidateQueries({ queryKey: qk.me() });
+
       navigate({ to: "/projects" });
     } catch (err) {
-      setError("Failed to create account. Email may already be in use.");
+      setError(err instanceof Error ? err.message : "Failed to create account");
     } finally {
       setLoading(false);
     }
