@@ -110,6 +110,22 @@ def run_research_task(self, run_id: str) -> dict:
                 )
                 session.commit()
 
+            # Build a markdown report from the scraped docs.
+            if docs:
+                from collections import defaultdict
+
+                by_competitor: dict[str, list] = defaultdict(list)
+                for d in docs:
+                    by_competitor[d.competitor].append(d)
+                sections = ["# Competitive Research Report\n"]
+                for competitor, comp_docs in by_competitor.items():
+                    sections.append(f"## {competitor}\n")
+                    for doc in comp_docs[:3]:
+                        sections.append(
+                            f"**Source:** {doc.url}  \n**Type:** {doc.source_type}\n\n{doc.text[:1200]}\n"
+                        )
+                run.report_md = "\n---\n\n".join(sections)
+
             run.status = "completed"
             run.finished_at = datetime.now(UTC)
             run.token_input = budget.input_tokens

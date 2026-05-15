@@ -75,7 +75,7 @@ async def python_exec(code: str, dataset_id: str) -> dict:
 
 
     # Tulis ke temp file
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as f:
         f.write(script)
         tmp_path = f.name
 
