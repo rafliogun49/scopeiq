@@ -53,20 +53,23 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4 py-12">
-      <Card className="w-full max-w-md rounded-[2rem] border border-slate-200/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="font-geist text-2xl font-semibold tracking-tight">
+    <div className="mx-auto flex min-h-[calc(100dvh-5rem)] max-w-6xl items-center justify-center px-6 py-12">
+      <Card className="w-full max-w-md rounded-[2rem] border border-slate-200/70 bg-white/95 shadow-[0_28px_80px_-45px_rgba(15,23,42,0.45)]">
+        <CardHeader className="border-b border-slate-200/70 px-6 pb-6 pt-6 text-center">
+          <p className="font-geist text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+            ScopeIQ access
+          </p>
+          <CardTitle className="mt-2 font-geist text-3xl font-semibold tracking-tight text-slate-950">
             Welcome back
           </CardTitle>
-          <CardDescription className="font-satoshi text-slate-600">
+          <CardDescription className="font-satoshi text-sm text-slate-600">
             Enter your credentials to sign in
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 px-6 py-6">
             {error && (
-              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                 {error}
               </div>
             )}
@@ -103,7 +106,7 @@ function LoginPage() {
             </div>
           </CardContent>
 
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4 border-t border-slate-200/70 bg-white/80 p-6">
             <Button
               type="submit"
               className="w-full"
@@ -116,7 +119,7 @@ function LoginPage() {
               Don't have an account?{" "}
               <a
                 href="/signup"
-                className="font-medium text-primary hover:underline"
+                className="font-medium text-emerald-800 hover:underline"
               >
                 Sign up
               </a>

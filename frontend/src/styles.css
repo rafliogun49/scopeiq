@@ -11,3 +11,38 @@
     @apply bg-white text-gray-900 antialiased;
   }
 }
+
+@layer utilities {
+  .scopeiq-app-bg {
+    background: radial-gradient(
+        circle at 12% 8%,
+        rgba(16, 185, 129, 0.14),
+        transparent 28rem
+      ),
+      radial-gradient(
+        circle at 88% 18%,
+        rgba(15, 23, 42, 0.08),
+        transparent 24rem
+      ),
+      radial-gradient(
+        circle at 72% 84%,
+        rgba(20, 184, 166, 0.1),
+        transparent 26rem
+      ),
+      linear-gradient(135deg, #f8faf6 0%, #f2f5ee 48%, #f8faf6 100%);
+  }
+
+  .scopeiq-app-bg::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(
+        rgba(15, 23, 42, 0.035) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 75%);
+  }
+}

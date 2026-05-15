@@ -8,6 +8,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -77,16 +78,19 @@ function StartRunPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
-      <Card className="rounded-[2rem] border border-slate-200/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
-        <CardHeader>
-          <CardTitle className="font-geist text-2xl font-semibold tracking-tight">
+      <Card className="rounded-[2rem] border border-slate-200/70 bg-white/95 shadow-[0_28px_80px_-45px_rgba(15,23,42,0.45)]">
+        <CardHeader className="border-b border-slate-200/70 px-6 pb-6 pt-6">
+          <p className="font-geist text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+            Agent workflow
+          </p>
+          <CardTitle className="mt-2 font-geist text-3xl font-semibold tracking-tight text-slate-950">
             Start Research
           </CardTitle>
-          <CardDescription className="font-satoshi text-slate-600">
+          <CardDescription className="font-satoshi text-sm text-slate-600">
             AI agents will research your idea and generate a report
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 px-6 py-6">
           <div>
             <h3 className="font-geist text-sm font-semibold mb-2">Project</h3>
             <p className="font-satoshi text-slate-600">{project.name}</p>
@@ -126,7 +130,7 @@ function StartRunPage() {
             </ul>
           </div>
 
-          <div className="rounded-lg bg-slate-50 p-4">
+          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4">
             <h3 className="font-geist text-sm font-semibold mb-2">Estimated</h3>
             <div className="grid grid-cols-2 gap-4 font-satoshi text-sm">
               <div>
@@ -140,7 +144,7 @@ function StartRunPage() {
             </div>
           </div>
         </CardContent>
-        <div className="flex justify-between">
+        <CardFooter className="flex flex-col-reverse gap-3 border-t border-slate-200/70 bg-white/70 p-6 sm:flex-row sm:justify-between">
           <Button
             variant="outline"
             onClick={() =>
@@ -155,7 +159,7 @@ function StartRunPage() {
           >
             {startRun.isPending ? "Starting..." : "Start Research"}
           </Button>
-        </div>
+        </CardFooter>
       </Card>
     </div>
   );

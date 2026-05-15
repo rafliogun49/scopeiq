@@ -32,15 +32,15 @@ function RunProgressPage() {
   const getStatusColor = () => {
     switch (status) {
       case "connecting":
-        return "bg-blue-100 text-blue-700";
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
       case "streaming":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100";
       case "complete":
-        return "bg-green-100 text-green-700";
+        return "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200";
       case "error":
-        return "bg-red-100 text-red-700";
+        return "bg-red-50 text-red-700 ring-1 ring-red-200";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
     }
   };
 
@@ -77,19 +77,21 @@ function RunProgressPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+      <div className="mb-8 rounded-[2rem] border border-slate-200/70 bg-white/85 p-6 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.38)]">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <Link to="/projects/$projectId" params={{ projectId }}>
-              <Button variant="outline" className="rounded-xl font-geist mb-4">
+              <Button variant="outline" className="mb-4">
                 ← Back to Project
               </Button>
             </Link>
-            <h1 className="font-geist text-2xl font-semibold tracking-tight">
+            <p className="mb-2 font-geist text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+              Live agent run
+            </p>
+            <h1 className="font-geist text-3xl font-semibold tracking-tight text-slate-950">
               Research in Progress
             </h1>
-            <p className="mt-1 font-satoshi text-slate-600">
+            <p className="mt-2 font-satoshi text-sm text-slate-600">
               {project?.name || "Loading project..."}
             </p>
           </div>
@@ -150,8 +152,8 @@ function RunProgressPage() {
       )}
 
       {/* Events Timeline */}
-      <Card className="rounded-[2rem] border border-slate-200/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
-        <CardHeader>
+      <Card className="rounded-[2rem] border border-slate-200/70 bg-white/95 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.38)]">
+        <CardHeader className="border-b border-slate-200/70 px-6 pb-5 pt-6">
           <CardTitle className="font-geist text-lg font-semibold">
             Live Progress
           </CardTitle>
@@ -159,11 +161,11 @@ function RunProgressPage() {
             Watching agent activity in real-time
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 py-6">
           {events.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-100">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-700 border-t-transparent" />
               </div>
               <p className="font-satoshi text-slate-600">
                 Waiting for agent to start...
