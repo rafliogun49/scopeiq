@@ -17,6 +17,7 @@ from app.schemas.projects import (
     ProjectUpdate,
     ProjectWithLastRun,
 )
+from app.schemas.runs import ReportResponse
 
 router = APIRouter()
 
@@ -91,6 +92,24 @@ def update_project(
     session.commit()
     session.refresh(project)
     return project
+
+
+@router.get("/{project_id}/report", response_model=ReportResponse)
+def get_project_report(
+    project_id: UUID,
+    session: SessionDep,
+    current_user: CurrentUserDep,
+) -> ReportResponse:
+    _load_owned_project(session, project_id, current_user.id)
+    run = session.exec(
+        select(Run)
+        .where(Run.project_id == project_id, Run.status == "completed", Run.report_md.isnot(None))
+        .order_by(col(Run.created_at).desc())
+        .limit(1)
+    ).first()
+    if run is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No report available")
+    return ReportResponse(id=run.id, project_id=run.project_id, report_md=run.report_md, created_at=run.created_at)
 
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
