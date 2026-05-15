@@ -39,3 +39,12 @@ class RunEventResponse(BaseModel):
     type: str
     agent: str | None = None
     payload: dict[str, Any]
+
+
+class ReportResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    project_id: UUID
+    report_md: str
+    created_at: datetime
