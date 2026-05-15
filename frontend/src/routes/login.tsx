@@ -106,7 +106,7 @@ function LoginPage() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className="w-full rounded-xl font-geist font-medium active:scale-[0.98] transition-transform"
+              className="w-full"
               disabled={loading || !email || !password}
             >
               {loading ? "Signing in..." : "Sign in"}

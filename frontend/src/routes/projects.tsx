@@ -23,8 +23,9 @@ function ProjectsPage() {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
+  const normalizedPathname = pathname.replace(/\/+$/, "") || "/";
 
-  if (pathname !== "/projects") {
+  if (normalizedPathname !== "/projects") {
     return <Outlet />;
   }
 
@@ -63,21 +64,25 @@ function ProjectsIndexPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="font-geist text-2xl font-semibold tracking-tight">
-            Projects
-          </h1>
-          <p className="mt-1 font-satoshi text-slate-600">
-            Manage your research projects
-          </p>
+    <div className="mx-auto max-w-6xl px-6 py-10">
+      <div className="mb-8 rounded-[2rem] border border-slate-200/70 bg-white/80 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.32)]">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="mb-2 font-geist text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+              Research workspace
+            </p>
+            <h1 className="font-geist text-3xl font-semibold tracking-tight text-slate-950">
+              Projects
+            </h1>
+            <p className="mt-2 max-w-2xl font-satoshi text-sm leading-relaxed text-slate-600">
+              Track idea validation runs, reports, and follow-up research from
+              one focused workspace.
+            </p>
+          </div>
+          <Link to="/projects/new">
+            <Button size="lg">New Project</Button>
+          </Link>
         </div>
-        <Link to="/projects/new">
-          <Button className="rounded-xl font-geist active:scale-[0.98] transition-transform">
-            New Project
-          </Button>
-        </Link>
       </div>
 
       {!projects || projects.length === 0 ? (
@@ -105,41 +110,39 @@ function ProjectsIndexPage() {
               Create your first research project to get started
             </p>
             <Link to="/projects/new" className="mt-4">
-              <Button className="rounded-xl font-geist active:scale-[0.98] transition-transform">
-                Create Project
-              </Button>
+              <Button>Create Project</Button>
             </Link>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {projects.map((project) => (
             <Link
               key={project.id}
               to="/projects/$projectId"
               params={{ projectId: project.id }}
             >
-              <Card className="cursor-pointer rounded-[2rem] border border-slate-200/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-xl transition-shadow">
-                <CardHeader>
-                  <CardTitle className="font-geist text-lg font-semibold tracking-tight">
+              <Card className="min-h-56 cursor-pointer rounded-[1.75rem] border border-slate-200/70 bg-white/90 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.45)] transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-[0_28px_80px_-45px_rgba(16,185,129,0.35)]">
+                <CardHeader className="px-5 pt-5">
+                  <CardTitle className="font-geist text-xl font-semibold tracking-tight text-slate-950">
                     {project.name}
                   </CardTitle>
                   <CardDescription className="font-satoshi">
                     {new Date(project.created_at).toLocaleDateString()}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="font-satoshi text-sm text-slate-600 line-clamp-2">
+                <CardContent className="px-5 pb-5">
+                  <p className="line-clamp-3 font-satoshi text-sm leading-relaxed text-slate-600">
                     {project.idea}
                   </p>
                   {project.known_competitors?.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1">
+                    <div className="mt-5 flex flex-wrap gap-1.5">
                       {project.known_competitors
                         .slice(0, 3)
                         .map((competitor) => (
                           <span
                             key={competitor}
-                            className="rounded-full bg-slate-100 px-2 py-1 text-xs font-satoshi text-slate-600"
+                            className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-satoshi text-slate-600 ring-1 ring-slate-200/70"
                           >
                             {competitor}
                           </span>

@@ -29,7 +29,6 @@ function CreateProjectPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("✅ Form submitted");
     setError("");
 
     if (!name) {
@@ -63,7 +62,6 @@ function CreateProjectPage() {
         params: { projectId: project.id },
       });
     } catch (err) {
-      console.error("❌ Error:", err);
       setError(err instanceof Error ? err.message : "Failed to create project");
     } finally {
       setLoading(false);
@@ -144,15 +142,10 @@ function CreateProjectPage() {
               type="button"
               variant="outline"
               onClick={() => navigate({ to: "/projects" })}
-              className="rounded-xl font-geist"
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={loading || !name || !idea}
-              className="rounded-xl font-geist active:scale-[0.98] transition-transform"
-            >
+            <Button type="submit" disabled={loading || !name || !idea}>
               {loading ? "Creating..." : "Create Project"}
             </Button>
           </CardFooter>

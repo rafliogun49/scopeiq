@@ -6,13 +6,7 @@ import { qk } from "@/lib/qk";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/projects/$projectId/chat")({
   component: ChatPage,
@@ -194,7 +188,7 @@ function ChatPage() {
                 placeholder="Ask a follow-up question..."
                 rows={2}
                 value={form.state.values.message}
-                onChange={(v) => form.setFieldValue("message", v)}
+                onChange={(e) => form.setFieldValue("message", e.target.value)}
                 onBlur={form.handleBlur}
                 disabled={sendMessage.isPending}
                 className="rounded-xl resize-none"
@@ -202,7 +196,7 @@ function ChatPage() {
               <Button
                 type="submit"
                 disabled={sendMessage.isPending || !form.state.values.message}
-                className="rounded-xl font-geist self-end active:scale-[0.98] transition-transform"
+                className="self-end"
               >
                 {sendMessage.isPending ? "Sending..." : "Send"}
               </Button>

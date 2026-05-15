@@ -3,6 +3,15 @@ import { useRunStream } from "@/hooks/useRunStream";
 import { useProject } from "@/hooks/useProjects";
 import { Button } from "@/components/ui/button";
 import {
+  AlertCircle,
+  Bot,
+  CheckCircle2,
+  Circle,
+  ClipboardList,
+  FileText,
+  Wrench,
+} from "lucide-react";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -36,21 +45,23 @@ function RunProgressPage() {
   };
 
   const getEventIcon = (type: string) => {
+    const iconClass = "h-5 w-5";
+
     switch (type) {
       case "plan":
-        return "📋";
+        return <ClipboardList className={iconClass} strokeWidth={1.8} />;
       case "agent_started":
-        return "🤖";
+        return <Bot className={iconClass} strokeWidth={1.8} />;
       case "tool_called":
-        return "🔧";
+        return <Wrench className={iconClass} strokeWidth={1.8} />;
       case "agent_finished":
-        return "✅";
+        return <CheckCircle2 className={iconClass} strokeWidth={1.8} />;
       case "error":
-        return "❌";
+        return <AlertCircle className={iconClass} strokeWidth={1.8} />;
       case "log":
-        return "📝";
+        return <FileText className={iconClass} strokeWidth={1.8} />;
       default:
-        return "•";
+        return <Circle className="h-3 w-3" strokeWidth={1.8} />;
     }
   };
 
@@ -130,7 +141,6 @@ function RunProgressPage() {
                     params: { projectId },
                   })
                 }
-                className="rounded-xl bg-green-600 font-geist hover:bg-green-700 active:scale-[0.98] transition-transform"
               >
                 View Report
               </Button>
@@ -166,7 +176,9 @@ function RunProgressPage() {
                   key={index}
                   className="flex items-start gap-3 rounded-lg border border-slate-100 p-4"
                 >
-                  <div className="text-xl">{getEventIcon(event.type)}</div>
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+                    {getEventIcon(event.type)}
+                  </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-geist text-sm font-medium capitalize">

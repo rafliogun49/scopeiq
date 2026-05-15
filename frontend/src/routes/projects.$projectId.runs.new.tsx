@@ -98,26 +98,26 @@ function StartRunPage() {
             </h3>
             <ul className="space-y-2 font-satoshi text-sm text-slate-600">
               <li className="flex items-start gap-2">
-                <span className="text-blue-600">1.</span>
+                <span className="text-emerald-700">1.</span>
                 <span>
                   <strong>Orchestrator</strong> plans the research strategy
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600">2.</span>
+                <span className="text-emerald-700">2.</span>
                 <span>
                   <strong>Scraper agent</strong> fetches competitor websites
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600">3.</span>
+                <span className="text-emerald-700">3.</span>
                 <span>
                   <strong>Social agent</strong> mines HN, Stack Exchange for
                   user complaints
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600">4.</span>
+                <span className="text-emerald-700">4.</span>
                 <span>
                   <strong>Synthesizer</strong> writes the final report with
                   citations
@@ -146,14 +146,12 @@ function StartRunPage() {
             onClick={() =>
               navigate({ to: "/projects/$projectId", params: { projectId } })
             }
-            className="rounded-xl font-geist"
           >
             Cancel
           </Button>
           <Button
             onClick={() => startRun.mutate()}
             disabled={startRun.isPending}
-            className="rounded-xl bg-blue-600 font-geist hover:bg-blue-700 active:scale-[0.98] transition-transform"
           >
             {startRun.isPending ? "Starting..." : "Start Research"}
           </Button>

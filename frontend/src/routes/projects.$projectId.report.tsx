@@ -6,13 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/projects/$projectId/report")({
   component: ReportPage,
@@ -108,12 +102,7 @@ function ReportPage() {
             Generated {new Date(report.created_at).toLocaleDateString()}
           </p>
         </div>
-        <Button
-          onClick={handleDownload}
-          className="rounded-xl font-geist active:scale-[0.98] transition-transform"
-        >
-          Download .md
-        </Button>
+        <Button onClick={handleDownload}>Download .md</Button>
       </div>
 
       <Card className="rounded-[2rem] border border-slate-200/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
