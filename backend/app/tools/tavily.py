@@ -1,12 +1,16 @@
-"""tavily_search tool — implemented in B-PR3.
+"""tavily_search tool — B-PR3."""
 
-Three call patterns:
-1. Review snippets — include_domains=["g2.com","trustpilot.com","capterra.com"]
-2. Indie Hackers threads — include_domains=["indiehackers.com"]
-3. General market signal — exclude_domains=["reddit.com"]
-See PRD §10.3 and TEAM_SPLIT §4 (B-PR3).
-"""
-# TODO (B-PR3)
+import os
+import pathlib
+
+from dotenv import load_dotenv
+from tavily import AsyncTavilyClient
+
+load_dotenv(pathlib.Path(__file__).parent.parent.parent.parent / ".env")
+
+
+def _client() -> AsyncTavilyClient:
+    return AsyncTavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
 
 async def tavily_search(
@@ -16,4 +20,18 @@ async def tavily_search(
     exclude_domains: list[str] | None = None,
 ) -> list[dict]:
     """Returns [{title, url, snippet}]."""
-    raise NotImplementedError
+    response = await _client().search(
+        query=query,
+        max_results=max_results,
+        include_domains=include_domains or [],
+        exclude_domains=exclude_domains or [],
+        search_depth="advanced",
+    )
+    return [
+        {
+            "title": r.get("title", ""),
+            "url": r.get("url", ""),
+            "snippet": r.get("content", ""),
+        }
+        for r in response.get("results", [])
+    ]

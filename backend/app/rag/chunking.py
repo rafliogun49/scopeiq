@@ -1,12 +1,21 @@
-"""Token-aware text chunker — implemented in B-PR1.
+"""Token-aware text chunker — B-PR1."""
+import tiktoken
 
-Splits text into chunks of ~800 tokens with 100-token overlap.
-See PRD §11 (Indexing pipeline) and TEAM_SPLIT §4 (B-PR1).
-"""
-# TODO (B-PR1): implement using tiktoken or a similar tokenizer
-# Acceptance: chunk boundaries respect token limits (unit test in tests/test_rag.py)
+_enc = tiktoken.get_encoding("cl100k_base")
 
 
 def chunk_text(text: str, size: int = 800, overlap: int = 100) -> list[str]:
-    """Split text into token-aware chunks."""
-    raise NotImplementedError
+    """Split text into token-aware chunks with overlap."""
+    tokens = _enc.encode(text)
+    chunks = []
+    start = 0
+
+    while start < len(tokens):
+        end = start + size
+        chunk_tokens = tokens[start:end]
+        chunks.append(_enc.decode(chunk_tokens))
+        if end >= len(tokens):
+            break
+        start += size - overlap  # geser mundur sebesar overlap
+
+    return chunks
