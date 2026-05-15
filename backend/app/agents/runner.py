@@ -6,6 +6,7 @@ Two execution paths:
 
 The stub mode keeps CI fast and free; production uses the real SDK.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -18,7 +19,7 @@ from app.schemas.rag import RawDoc
 from app.tools.discover_urls import discover_urls
 from app.tools.extract_text import extract_text
 from app.tools.http_fetch import http_fetch
-from app.workers.budget import BudgetExceeded, get_budget
+from app.workers.budget import get_budget
 from app.workers.run_events import emit_event, run_id_var
 
 _USE_STUB = False

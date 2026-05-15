@@ -4,6 +4,7 @@ Mirrors the run_id_var contextvar pattern from run_events.py.
 Tools and the agent runner mutate the RunBudget; when a cap is exceeded,
 BudgetExceeded is raised and the Celery task marks the run failed.
 """
+
 from __future__ import annotations
 
 from contextvars import ContextVar
@@ -42,7 +43,7 @@ class RunBudget:
     _turns: dict[str, int] = field(default_factory=dict)
 
     @classmethod
-    def from_settings(cls) -> "RunBudget":
+    def from_settings(cls) -> RunBudget:
         from app.core.config import settings
 
         return cls(

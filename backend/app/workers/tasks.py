@@ -1,4 +1,5 @@
 """Celery tasks — real research pipeline (A-PR4)."""
+
 from __future__ import annotations
 
 import asyncio

@@ -8,6 +8,7 @@ Synthesizer agent handoff. See PRD §10 and TEAM_SPLIT §3.
 Prompt is fetched from Langfuse (name: "scopeiq-orchestrator") at run time,
 falling back to prompts/orchestrator.md when Langfuse is not configured.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

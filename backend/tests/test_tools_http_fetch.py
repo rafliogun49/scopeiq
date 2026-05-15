@@ -1,4 +1,5 @@
 """Unit tests for app.tools.http_fetch (A-PR4)."""
+
 from __future__ import annotations
 
 import asyncio

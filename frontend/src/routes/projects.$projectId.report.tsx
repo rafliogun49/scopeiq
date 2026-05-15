@@ -1,4 +1,4 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { qk } from "@/lib/qk";
@@ -26,7 +26,7 @@ interface Report {
 }
 
 function ReportPage() {
-  const { projectId } = useParams();
+  const { projectId } = Route.useParams();
 
   const { data: report, isLoading } = useQuery<Report>({
     queryKey: qk.report(projectId),

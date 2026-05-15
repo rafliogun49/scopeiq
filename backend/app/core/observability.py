@@ -7,10 +7,12 @@ Two surfaces:
 Both surfaces degrade gracefully to no-ops when Langfuse credentials are absent,
 so tests and local dev work without a Langfuse account.
 """
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +31,9 @@ except ImportError:  # pragma: no cover
 # Noop fallbacks (used when Langfuse is not configured)
 # ---------------------------------------------------------------------------
 
+
 class _NoopSpan:
-    def update(self, **kwargs: Any) -> "_NoopSpan":
+    def update(self, **kwargs: Any) -> _NoopSpan:
         return self
 
     def end(self, **kwargs: Any) -> None:
@@ -41,14 +44,15 @@ class _NoopSpan:
 # Real handle returned by start_observation
 # ---------------------------------------------------------------------------
 
+
 class _TraceHandle:
     """Wraps a Langfuse trace, exposing the update/end interface expected by tasks.py."""
 
-    def __init__(self, trace: Any, client: "Langfuse") -> None:
+    def __init__(self, trace: Any, client: Langfuse) -> None:
         self._trace = trace
         self._client = client
 
-    def update(self, metadata: dict[str, Any] | None = None, **kwargs: Any) -> "_TraceHandle":
+    def update(self, metadata: dict[str, Any] | None = None, **kwargs: Any) -> _TraceHandle:
         try:
             self._trace.update(metadata=metadata or {})
         except Exception as exc:
@@ -66,12 +70,13 @@ class _TraceHandle:
 # Central wrapper
 # ---------------------------------------------------------------------------
 
+
 class _LangfuseWrapper:
     def __init__(self) -> None:
-        self._client: "Langfuse | None" = None
+        self._client: Langfuse | None = None
         self._initialized = False
 
-    def _get(self) -> "Langfuse | None":
+    def _get(self) -> Langfuse | None:
         if not _LANGFUSE_AVAILABLE:
             return None
         if not self._initialized:
@@ -145,6 +150,7 @@ def get_client() -> _LangfuseWrapper:
 # ---------------------------------------------------------------------------
 # @observe decorator
 # ---------------------------------------------------------------------------
+
 
 def observe(name: str = "", as_type: str = "span", **kwargs: Any) -> Callable:
     """Wrap a sync or async function with a Langfuse observation.

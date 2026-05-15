@@ -3,6 +3,7 @@
 1-level crawl on a competitor domain looking for /pricing, /features, /about.
 Cap: 5 URLs per domain. See PRD §10.3.
 """
+
 from __future__ import annotations
 
 from urllib.parse import urlparse

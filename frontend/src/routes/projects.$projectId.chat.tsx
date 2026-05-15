@@ -1,4 +1,4 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "@tanstack/react-form";
 import { api } from "@/lib/api";
@@ -28,7 +28,7 @@ interface ChatMessage {
 }
 
 function ChatPage() {
-  const { projectId } = useParams();
+  const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
 
   const { data: messages, isLoading } = useQuery<ChatMessage[]>({

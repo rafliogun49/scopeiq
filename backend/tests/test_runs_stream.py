@@ -1,4 +1,5 @@
 """SSE stream endpoint test (A-PR4)."""
+
 from __future__ import annotations
 
 import json
@@ -74,9 +75,7 @@ def test_stream_emits_progress_then_complete(client: TestClient, auth_headers):
     headers = auth_headers()
     project_id = _make_project(client, headers)
 
-    run_id = client.post(
-        f"/api/v1/projects/{project_id}/runs", headers=headers
-    ).json()["run_id"]
+    run_id = client.post(f"/api/v1/projects/{project_id}/runs", headers=headers).json()["run_id"]
 
     # Run already completed (eager Celery). Stream should drain events + emit complete.
     with client.stream("GET", f"/api/v1/runs/{run_id}/stream", headers=headers) as r:
@@ -100,9 +99,7 @@ def test_stream_404_for_other_user(client: TestClient, auth_headers):
     alice = auth_headers("alice@example.com")
     bob = auth_headers("bob@example.com")
     project_id = _make_project(client, bob)
-    run_id = client.post(
-        f"/api/v1/projects/{project_id}/runs", headers=bob
-    ).json()["run_id"]
+    run_id = client.post(f"/api/v1/projects/{project_id}/runs", headers=bob).json()["run_id"]
 
     r = client.get(f"/api/v1/runs/{run_id}/stream", headers=alice)
     assert r.status_code == 404

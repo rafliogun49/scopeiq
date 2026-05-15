@@ -1,4 +1,5 @@
 """Unit tests for RunBudget and pricing — A-PR5."""
+
 from __future__ import annotations
 
 import pytest
@@ -129,5 +130,11 @@ def test_check_turn_independent_per_agent():
 def test_caps_snapshot_has_all_keys():
     b = _budget()
     snap = b.caps_snapshot()
-    for key in ("max_input_tokens", "max_output_tokens", "max_fetches", "max_searches", "max_agent_turns"):
+    for key in (
+        "max_input_tokens",
+        "max_output_tokens",
+        "max_fetches",
+        "max_searches",
+        "max_agent_turns",
+    ):
         assert key in snap

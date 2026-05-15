@@ -1,7 +1,8 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { useProject, useDeleteProject } from "@/hooks/useProjects";
+import { useProject } from "@/hooks/useProjects";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
@@ -10,30 +11,66 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/projects/$projectId/runs/new")({
   component: StartRunPage,
 });
 
+interface CreateRunResponse {
+  run_id: string;
+  status: string;
+}
+
 function StartRunPage() {
-  const { projectId } = useParams();
-  const { data: project, isLoading } = useProject(projectId);
+  const { projectId } = Route.useParams();
+  const navigate = useNavigate();
+  const { data: project, isLoading, error } = useProject(projectId);
 
   const startRun = useMutation({
     mutationFn: () =>
-      api.post("/projects/{projectId}/runs".replace("{projectId}", projectId)),
+      api.post<CreateRunResponse>(`/projects/${projectId}/runs`, {}),
+    onSuccess: (data) => {
+      navigate({
+        to: "/projects/$projectId/runs/$runId",
+        params: { projectId, runId: data.run_id },
+      });
+    },
   });
 
   if (isLoading) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-10">
+        <div className="mb-8">
+          <Link to="/projects/$projectId" params={{ projectId }}>
+            <Button variant="outline" className="rounded-xl font-geist">
+              ← Back to Project
+            </Button>
+          </Link>
+        </div>
         <Skeleton className="h-8 w-64 mb-8" />
         <Card className="rounded-[2rem]">
           <CardContent className="pt-6">
             <Skeleton className="h-4 w-full" />
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (error || !project) {
+    return (
+      <div className="mx-auto max-w-2xl px-6 py-10 text-center">
+        <h1 className="font-geist text-2xl font-semibold">Project not found</h1>
+        <p className="mt-2 font-satoshi text-slate-600">
+          {error instanceof Error
+            ? error.message
+            : "The project you're looking for doesn't exist."}
+        </p>
+        <Link to="/projects">
+          <Button variant="outline" className="mt-4 rounded-xl">
+            Back to Projects
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -52,7 +89,7 @@ function StartRunPage() {
         <CardContent className="space-y-6">
           <div>
             <h3 className="font-geist text-sm font-semibold mb-2">Project</h3>
-            <p className="font-satoshi text-slate-600">{project?.name}</p>
+            <p className="font-satoshi text-slate-600">{project.name}</p>
           </div>
 
           <div>
@@ -106,19 +143,15 @@ function StartRunPage() {
         <div className="flex justify-between">
           <Button
             variant="outline"
-            onClick={() => window.history.back()}
+            onClick={() =>
+              navigate({ to: "/projects/$projectId", params: { projectId } })
+            }
             className="rounded-xl font-geist"
           >
             Cancel
           </Button>
           <Button
-            onClick={() => {
-              startRun.mutate(undefined, {
-                onSuccess: (run: { id: string }) => {
-                  window.location.href = `/projects/${projectId}/runs/${run.id}`;
-                },
-              });
-            }}
+            onClick={() => startRun.mutate()}
             disabled={startRun.isPending}
             className="rounded-xl bg-blue-600 font-geist hover:bg-blue-700 active:scale-[0.98] transition-transform"
           >

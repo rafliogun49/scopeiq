@@ -22,17 +22,7 @@ declare module "@tanstack/react-router" {
   }
 }
 
-// MSW disabled for real backend testing
-// async function enableMocking() {
-//   if (import.meta.env.DEV) {
-//     const { worker } = await import("./mocks/browser");
-//     return worker.start({
-//       onUnhandledRequest: "bypass",
-//     });
-//   }
-// }
-
-// enableMocking().then(() => {
+// MSW disabled - using real backend
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
@@ -40,4 +30,3 @@ createRoot(document.getElementById("root")!).render(
     </QueryClientProvider>
   </StrictMode>,
 );
-// });

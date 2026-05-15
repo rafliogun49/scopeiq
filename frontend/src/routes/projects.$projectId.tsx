@@ -3,6 +3,7 @@ import {
   Link,
   Outlet,
   useRouterState,
+  useNavigate,
 } from "@tanstack/react-router";
 import { useProject, useDeleteProject } from "@/hooks/useProjects";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,12 +34,20 @@ function ProjectDetailPage() {
 }
 
 function ProjectDetailContent({ projectId }: { projectId: string }) {
-  const { data: project, isLoading } = useProject(projectId);
+  const navigate = useNavigate();
+  const { data: project, isLoading, error } = useProject(projectId);
   const deleteProject = useDeleteProject();
 
   if (isLoading) {
     return (
       <div className="mx-auto max-w-5xl px-6 py-10">
+        <div className="mb-8">
+          <Link to="/projects">
+            <Button variant="outline" className="rounded-xl font-geist">
+              ← Back to Projects
+            </Button>
+          </Link>
+        </div>
         <Skeleton className="h-8 w-64 mb-8" />
         <Card className="rounded-[2rem]">
           <CardHeader>
@@ -54,10 +63,15 @@ function ProjectDetailContent({ projectId }: { projectId: string }) {
     );
   }
 
-  if (!project) {
+  if (error || !project) {
     return (
       <div className="mx-auto max-w-5xl px-6 py-10 text-center">
         <h1 className="font-geist text-2xl font-semibold">Project not found</h1>
+        <p className="mt-2 font-satoshi text-slate-600">
+          {error instanceof Error
+            ? error.message
+            : "The project you're looking for doesn't exist."}
+        </p>
         <Link to="/projects">
           <Button variant="outline" className="mt-4 rounded-xl">
             Back to Projects
@@ -67,28 +81,43 @@ function ProjectDetailContent({ projectId }: { projectId: string }) {
     );
   }
 
+  const createdDate = project.created_at
+    ? new Date(project.created_at).toLocaleDateString()
+    : "Unknown date";
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="font-geist text-2xl font-semibold tracking-tight">
-            {project.name}
-          </h1>
-          <p className="mt-1 font-satoshi text-slate-600">
-            Created {new Date(project.created_at).toLocaleDateString()}
-          </p>
+      <div className="mb-8">
+        <Link to="/projects">
+          <Button variant="outline" className="rounded-xl font-geist mb-4">
+            ← Back to Projects
+          </Button>
+        </Link>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="font-geist text-2xl font-semibold tracking-tight">
+              {project.name}
+            </h1>
+            <p className="mt-1 font-satoshi text-slate-600">
+              Created {createdDate}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (confirm("Are you sure you want to delete this project?")) {
+                deleteProject.mutate(projectId, {
+                  onSuccess: () => {
+                    navigate({ to: "/projects" });
+                  },
+                });
+              }
+            }}
+            className="rounded-xl font-geist text-red-600 hover:text-red-700"
+          >
+            Delete
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            if (confirm("Are you sure you want to delete this project?")) {
-              deleteProject.mutate(projectId);
-            }
-          }}
-          className="rounded-xl font-geist text-red-600 hover:text-red-700"
-        >
-          Delete
-        </Button>
       </div>
 
       <Card className="mb-8 rounded-[2rem] border border-slate-200/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">

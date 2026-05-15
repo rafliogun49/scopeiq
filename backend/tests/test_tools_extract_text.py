@@ -1,4 +1,5 @@
 """Unit tests for app.tools.extract_text (A-PR4)."""
+
 from __future__ import annotations
 
 from app.tools.extract_text import extract_text

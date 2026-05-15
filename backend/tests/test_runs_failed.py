@@ -1,4 +1,5 @@
 """Integration tests: budget-exceeded forces run to failed — A-PR5."""
+
 from __future__ import annotations
 
 import pytest
