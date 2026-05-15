@@ -6,13 +6,7 @@ import { qk } from "@/lib/qk";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/projects/$projectId/chat")({
   component: ChatPage,
@@ -78,18 +72,21 @@ function ChatPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
-      <div className="mb-8">
-        <h1 className="font-geist text-2xl font-semibold tracking-tight">
+      <div className="mb-8 rounded-[2rem] border border-slate-200/70 bg-white/85 p-6 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.38)]">
+        <p className="mb-2 font-geist text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+          Research assistant
+        </p>
+        <h1 className="font-geist text-3xl font-semibold tracking-tight text-slate-950">
           Chat with Research
         </h1>
-        <p className="mt-1 font-satoshi text-slate-600">
+        <p className="mt-2 font-satoshi text-sm text-slate-600">
           Ask follow-up questions about your research
         </p>
       </div>
 
       {/* Messages List */}
-      <Card className="mb-6 rounded-[2rem] border border-slate-200/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
-        <CardContent className="pt-6">
+      <Card className="mb-6 rounded-[2rem] border border-slate-200/70 bg-white/90 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.38)]">
+        <CardContent className="px-5 py-5">
           <div className="space-y-4 max-h-[60vh] overflow-y-auto">
             {messages && messages.length > 0 ? (
               messages.map((msg) => (
@@ -102,8 +99,8 @@ function ChatPage() {
                   <div
                     className={`max-w-[80%] rounded-[2rem] p-4 ${
                       msg.role === "user"
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 text-slate-900"
+                        ? "bg-slate-950 text-white shadow-[0_18px_45px_-30px_rgba(15,23,42,0.9)]"
+                        : "bg-slate-100/90 text-slate-900 ring-1 ring-slate-200/70"
                     }`}
                   >
                     <p className="font-satoshi text-sm leading-relaxed">
@@ -119,8 +116,8 @@ function ChatPage() {
                             rel="noopener noreferrer"
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${
                               msg.role === "user"
-                                ? "bg-blue-500 text-white hover:bg-blue-400"
-                                : "bg-white text-slate-600 hover:bg-slate-50"
+                                ? "bg-white/10 text-white hover:bg-white/15"
+                                : "bg-white text-emerald-800 hover:bg-emerald-50"
                             }`}
                           >
                             <svg
@@ -172,7 +169,7 @@ function ChatPage() {
 
             {sendMessage.isPending && (
               <div className="flex justify-start">
-                <div className="max-w-[80%] rounded-[2rem] p-4 bg-slate-100">
+                <div className="max-w-[80%] rounded-[2rem] bg-slate-100 p-4 ring-1 ring-slate-200/70">
                   <div className="flex gap-1">
                     <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
                     <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]" />
@@ -187,14 +184,14 @@ function ChatPage() {
 
       {/* Chat Input */}
       <form onSubmit={form.handleSubmit}>
-        <Card className="rounded-[2rem] border border-slate-200/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
-          <CardContent className="pt-6">
+        <Card className="rounded-[2rem] border border-slate-200/70 bg-white/95 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.38)]">
+          <CardContent className="p-5">
             <div className="flex gap-3">
               <Textarea
                 placeholder="Ask a follow-up question..."
                 rows={2}
                 value={form.state.values.message}
-                onChange={(v) => form.setFieldValue("message", v)}
+                onChange={(e) => form.setFieldValue("message", e.target.value)}
                 onBlur={form.handleBlur}
                 disabled={sendMessage.isPending}
                 className="rounded-xl resize-none"
@@ -202,7 +199,7 @@ function ChatPage() {
               <Button
                 type="submit"
                 disabled={sendMessage.isPending || !form.state.values.message}
-                className="rounded-xl font-geist self-end active:scale-[0.98] transition-transform"
+                className="self-end"
               >
                 {sendMessage.isPending ? "Sending..." : "Send"}
               </Button>

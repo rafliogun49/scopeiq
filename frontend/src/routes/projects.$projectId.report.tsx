@@ -2,17 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { qk } from "@/lib/qk";
+import { formatDisplayDate } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/projects/$projectId/report")({
   component: ReportPage,
@@ -99,25 +94,23 @@ function ReportPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col gap-5 rounded-[2rem] border border-slate-200/70 bg-white/85 p-6 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.38)] sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-geist text-2xl font-semibold tracking-tight">
+          <p className="mb-2 font-geist text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+            Final output
+          </p>
+          <h1 className="font-geist text-3xl font-semibold tracking-tight text-slate-950">
             Research Report
           </h1>
-          <p className="mt-1 font-satoshi text-slate-600">
-            Generated {new Date(report.created_at).toLocaleDateString()}
+          <p className="mt-2 font-satoshi text-sm text-slate-600">
+            Generated {formatDisplayDate(report.created_at)}
           </p>
         </div>
-        <Button
-          onClick={handleDownload}
-          className="rounded-xl font-geist active:scale-[0.98] transition-transform"
-        >
-          Download .md
-        </Button>
+        <Button onClick={handleDownload}>Download .md</Button>
       </div>
 
-      <Card className="rounded-[2rem] border border-slate-200/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
-        <CardContent className="prose prose-slate max-w-none pt-6">
+      <Card className="rounded-[2rem] border border-slate-200/70 bg-white/95 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.38)]">
+        <CardContent className="prose prose-slate max-w-none px-6 py-6">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
@@ -126,7 +119,7 @@ function ReportPage() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
+                  className="text-emerald-800 hover:underline"
                 >
                   {children}
                 </a>

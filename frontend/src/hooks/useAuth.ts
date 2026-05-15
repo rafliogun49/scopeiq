@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, setToken, clearToken } from '@/lib/api';
+import { api, clearToken } from '@/lib/api';
 import { qk } from '@/lib/qk';
 
 export interface User {
