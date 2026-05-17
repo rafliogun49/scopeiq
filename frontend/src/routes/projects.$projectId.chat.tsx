@@ -1,12 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "@tanstack/react-form";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { qk } from "@/lib/qk";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import {
+  ArrowUpRight,
+  ChevronLeft,
+  MessageSquare,
+  Sparkles,
+} from "lucide-react";
 
 export const Route = createFileRoute("/projects/$projectId/chat")({
   component: ChatPage,
@@ -17,42 +25,88 @@ interface ChatMessage {
   project_id: string;
   role: "user" | "assistant";
   content: string;
-  citations?: string[];
+  citations?: Citation[];
   created_at: string;
+}
+
+interface Citation {
+  chunk: string;
+  source_url: string;
+  score: number;
+}
+
+interface ChatResponse {
+  assistant_message: string;
+  citations: Citation[];
 }
 
 function ChatPage() {
   const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [message, setMessage] = useState("");
 
-  const { data: messages, isLoading } = useQuery<ChatMessage[]>({
+  const {
+    data: messages,
+    isLoading,
+    error,
+  } = useQuery<ChatMessage[]>({
     queryKey: qk.messages(projectId),
-    queryFn: () =>
-      api.get<ChatMessage[]>(`/projects/${projectId}/chat/messages`),
+    queryFn: () => api.get<ChatMessage[]>(`/projects/${projectId}/messages`),
   });
 
   const sendMessage = useMutation({
-    mutationFn: (content: string) =>
-      api.post<ChatMessage>(`/projects/${projectId}/chat`, { content }),
-    onSuccess: () => {
+    mutationFn: (message: string) =>
+      api.post<ChatResponse>(`/projects/${projectId}/chat`, { message }),
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: qk.messages(projectId) });
     },
   });
 
-  const form = useForm({
-    defaultValues: {
-      message: "",
-    },
-    validators: {
-      onChange: ({ value }) => ({
-        message: !value.message ? "Message is required" : undefined,
-      }),
-    },
-    onSubmit: async ({ value }) => {
-      await sendMessage.mutateAsync(value.message);
-      form.reset();
-    },
-  });
+  const pendingUserMessage = useMemo(() => {
+    const trimmedMessage = message.trim();
+    if (!sendMessage.isPending || !trimmedMessage) {
+      return null;
+    }
+
+    return {
+      id: "pending-user-message",
+      project_id: projectId,
+      role: "user" as const,
+      content: trimmedMessage,
+      citations: [],
+      created_at: new Date().toISOString(),
+    };
+  }, [message, projectId, sendMessage.isPending]);
+
+  const displayedMessages = useMemo(() => {
+    if (!pendingUserMessage) {
+      return messages ?? [];
+    }
+
+    return [...(messages ?? []), pendingUserMessage];
+  }, [messages, pendingUserMessage]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [displayedMessages, sendMessage.isPending]);
+
+  const messageError = message.trim() ? "" : "Message is required";
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage || sendMessage.isPending) {
+      return;
+    }
+
+    await sendMessage.mutateAsync(trimmedMessage);
+    setMessage("");
+  };
 
   if (isLoading) {
     return (
@@ -70,8 +124,44 @@ function ChatPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="mx-auto max-w-4xl px-6 py-10">
+        <Card className="rounded-[2rem] border border-red-200/70 bg-red-50/80 shadow-none">
+          <CardContent className="px-6 py-6">
+            <h1 className="font-geist text-lg font-semibold text-red-900">
+              Chat unavailable
+            </h1>
+            <p className="mt-2 font-satoshi text-sm leading-relaxed text-red-700">
+              {error instanceof Error
+                ? error.message
+                : "The chat history could not be loaded."}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <Link
+          to="/projects/$projectId"
+          params={{ projectId }}
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 font-geist text-sm font-medium text-slate-600 shadow-[0_14px_40px_-30px_rgba(15,23,42,0.45)] transition-colors hover:text-emerald-800"
+        >
+          <ChevronLeft className="h-4 w-4" strokeWidth={1.8} />
+          Back to project
+        </Link>
+        <Link
+          to="/projects"
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 font-geist text-sm font-medium text-slate-600 shadow-[0_14px_40px_-30px_rgba(15,23,42,0.45)] transition-colors hover:text-emerald-800"
+        >
+          Projects
+        </Link>
+      </div>
+
       <div className="mb-8 rounded-[2rem] border border-slate-200/70 bg-white/85 p-6 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.38)]">
         <p className="mb-2 font-geist text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
           Research assistant
@@ -87,9 +177,9 @@ function ChatPage() {
       {/* Messages List */}
       <Card className="mb-6 rounded-[2rem] border border-slate-200/70 bg-white/90 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.38)]">
         <CardContent className="px-5 py-5">
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-            {messages && messages.length > 0 ? (
-              messages.map((msg) => (
+          <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+            {displayedMessages.length > 0 ? (
+              displayedMessages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex ${
@@ -103,39 +193,74 @@ function ChatPage() {
                         : "bg-slate-100/90 text-slate-900 ring-1 ring-slate-200/70"
                     }`}
                   >
-                    <p className="font-satoshi text-sm leading-relaxed">
-                      {msg.content}
-                    </p>
+                    {msg.role === "assistant" ? (
+                      <div className="prose prose-sm prose-slate max-w-none font-satoshi prose-headings:font-geist prose-headings:tracking-tight prose-p:leading-relaxed prose-a:text-emerald-800">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            a: ({ href, children }) => (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-emerald-800 hover:underline"
+                              >
+                                {children}
+                                <ArrowUpRight
+                                  className="h-3.5 w-3.5"
+                                  strokeWidth={1.8}
+                                />
+                              </a>
+                            ),
+                            p: ({ children }) => (
+                              <p className="mb-3 font-satoshi text-sm leading-relaxed text-inherit last:mb-0">
+                                {children}
+                              </p>
+                            ),
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="font-satoshi text-sm leading-relaxed">
+                        {msg.content}
+                      </p>
+                    )}
                     {msg.citations && msg.citations.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {msg.citations.map((citation, i) => (
-                          <a
-                            key={i}
-                            href={citation}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${
-                              msg.role === "user"
-                                ? "bg-white/10 text-white hover:bg-white/15"
-                                : "bg-white text-emerald-800 hover:bg-emerald-50"
-                            }`}
-                          >
-                            <svg
-                              className="h-3 w-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
+                      <div className="mt-4 space-y-2">
+                        <div
+                          className={`flex items-center gap-2 text-[11px] font-geist font-semibold uppercase tracking-[0.14em] ${
+                            msg.role === "user"
+                              ? "text-white/70"
+                              : "text-slate-500"
+                          }`}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" strokeWidth={1.8} />
+                          Sources
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {msg.citations.map((citation, i) => (
+                            <a
+                              key={`${citation.source_url}-${i}`}
+                              href={citation.source_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${
+                                msg.role === "user"
+                                  ? "bg-white/10 text-white hover:bg-white/15"
+                                  : "bg-white text-emerald-800 ring-1 ring-slate-200/70 hover:bg-emerald-50"
+                              }`}
+                              title={citation.chunk}
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                              <ArrowUpRight
+                                className="h-3 w-3"
+                                strokeWidth={1.8}
                               />
-                            </svg>
-                            Source {i + 1}
-                          </a>
-                        ))}
+                              Source {i + 1}
+                            </a>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -143,20 +268,11 @@ function ChatPage() {
               ))
             ) : (
               <div className="text-center py-12">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 mx-auto">
-                  <svg
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                  <MessageSquare
                     className="h-8 w-8 text-slate-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                    />
-                  </svg>
+                    strokeWidth={1.6}
+                  />
                 </div>
                 <h3 className="font-geist text-lg font-semibold">
                   Start a conversation
@@ -178,36 +294,40 @@ function ChatPage() {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
         </CardContent>
       </Card>
 
       {/* Chat Input */}
-      <form onSubmit={form.handleSubmit}>
+      <form onSubmit={handleSubmit}>
         <Card className="rounded-[2rem] border border-slate-200/70 bg-white/95 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.38)]">
           <CardContent className="p-5">
             <div className="flex gap-3">
               <Textarea
                 placeholder="Ask a follow-up question..."
                 rows={2}
-                value={form.state.values.message}
-                onChange={(e) => form.setFieldValue("message", e.target.value)}
-                onBlur={form.handleBlur}
-                disabled={sendMessage.isPending}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
                 className="rounded-xl resize-none"
               />
               <Button
                 type="submit"
-                disabled={sendMessage.isPending || !form.state.values.message}
+                disabled={sendMessage.isPending || !message.trim()}
                 className="self-end"
               >
                 {sendMessage.isPending ? "Sending..." : "Send"}
               </Button>
             </div>
-            {form.state.errors.message && (
-              <p className="mt-2 text-sm text-red-600">
-                {form.state.errors.message}
+            {sendMessage.isError && (
+              <p className="mt-3 text-sm text-red-600">
+                {sendMessage.error instanceof Error
+                  ? sendMessage.error.message
+                  : "Message could not be sent."}
               </p>
+            )}
+            {!!message && !!messageError && (
+              <p className="mt-2 text-sm text-red-600">{messageError}</p>
             )}
           </CardContent>
         </Card>

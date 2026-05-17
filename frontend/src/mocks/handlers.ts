@@ -101,9 +101,21 @@ const mockMessages = [
     role: "assistant" as const,
     content: "Based on the research, the main pain points with Expensify are:\n\n1. **Poor international receipt support** - SmartScan fails ~30% of the time with non-US receipts, especially those with non-Latin scripts\n\n2. **Slow customer support** - Users report 3-5 day response times for support tickets\n\n3. **Mobile app stability issues** - Crashes when uploading multiple receipts at once\n\n4. **Pricing for small teams** - At $5/month per user, it's expensive for freelancers and solopreneurs\n\nWould you like me to dive deeper into any of these pain points?",
     citations: [
-      "https://news.ycombinator.com/item?id=123456",
-      "https://softwarerecs.stackexchange.com/q/12345",
-      "https://indiehackers.com/post/123456",
+      {
+        chunk: "SmartScan fails 30% of the time with international receipts.",
+        source_url: "https://news.ycombinator.com/item?id=123456",
+        score: 0.93,
+      },
+      {
+        chunk: "Customer support takes 3-5 days to respond.",
+        source_url: "https://softwarerecs.stackexchange.com/q/12345",
+        score: 0.89,
+      },
+      {
+        chunk: "Mobile app crashes when uploading multiple receipts.",
+        source_url: "https://indiehackers.com/post/123456",
+        score: 0.87,
+      },
     ],
     created_at: new Date().toISOString(),
   },
@@ -267,7 +279,7 @@ export const handlers = [
   }),
 
   // Chat endpoints
-  http.get(`${API_BASE_URL}/projects/:projectId/chat/messages`, async () => {
+  http.get(`${API_BASE_URL}/projects/:projectId/messages`, async () => {
     await delay(300);
     return HttpResponse.json(mockMessages);
   }),
@@ -275,13 +287,13 @@ export const handlers = [
   http.post(`${API_BASE_URL}/projects/:projectId/chat`, async ({ request }) => {
     await delay(1000);
     const body = await request.json();
-    const { content } = body as { content: string };
+    const { message } = body as { message: string };
 
     const newUserMessage = {
       id: `msg-${Date.now()}`,
       project_id: "project-1",
       role: "user" as const,
-      content,
+      content: message,
       citations: [],
       created_at: new Date().toISOString(),
     };
@@ -290,15 +302,26 @@ export const handlers = [
       id: `msg-${Date.now() + 1}`,
       project_id: "project-1",
       role: "assistant" as const,
-      content: `Great question about "${content}"! Based on the research collected, here's what I found:\n\nThe market shows strong demand for this feature, with 67% of users requesting it in surveys. Competitors who implemented similar features saw 23% increase in retention.\n\nWould you like me to elaborate on any specific aspect?`,
+      content: `Great question about "${message}"! Based on the research collected, here's what I found:\n\nThe market shows strong demand for this feature, with 67% of users requesting it in surveys. Competitors who implemented similar features saw a 23% increase in retention.\n\nWould you like me to elaborate on any specific aspect?`,
       citations: [
-        "https://example.com/market-survey",
-        "https://example.com/retention-study",
+        {
+          chunk: "67% of surveyed users asked for this feature.",
+          source_url: "https://example.com/market-survey",
+          score: 0.91,
+        },
+        {
+          chunk: "Competitors saw a 23% increase in retention.",
+          source_url: "https://example.com/retention-study",
+          score: 0.86,
+        },
       ],
       created_at: new Date().toISOString(),
     };
 
     mockMessages.push(newUserMessage, newAssistantMessage);
-    return HttpResponse.json(newAssistantMessage);
+    return HttpResponse.json({
+      assistant_message: newAssistantMessage.content,
+      citations: newAssistantMessage.citations,
+    });
   }),
 ];
