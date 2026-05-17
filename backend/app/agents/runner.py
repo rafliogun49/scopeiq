@@ -130,6 +130,27 @@ async def _run_real(project: Project) -> list[RawDoc]:
     raw_docs_var.set(docs)
     budget = get_budget()
     competitors = list(project.known_competitors or [])
+
+    # Always enrich competitor list via Tavily — user-provided ones come first
+    from urllib.parse import urlparse
+
+    from app.tools.tavily import tavily_search
+
+    search_results = await tavily_search(
+        f"top competitors alternatives to {project.idea}", max_results=6
+    )
+    seen: set[str] = set(competitors)
+    for r in search_results:
+        domain = urlparse(r.get("url", "")).netloc.replace("www.", "")
+        if domain and domain not in seen:
+            seen.add(domain)
+            competitors.append(domain)
+    emit_event(
+        "log",
+        agent="orchestrator",
+        payload={"discovered_competitors": competitors},
+    )
+
     if competitors:
         current_competitor_var.set(competitors[0])
 
