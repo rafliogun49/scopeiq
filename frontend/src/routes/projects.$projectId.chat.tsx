@@ -45,6 +45,7 @@ function ChatPage() {
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [message, setMessage] = useState("");
+  const [pendingContent, setPendingContent] = useState<string | null>(null);
 
   const {
     data: messages,
@@ -64,8 +65,7 @@ function ChatPage() {
   });
 
   const pendingUserMessage = useMemo(() => {
-    const trimmedMessage = message.trim();
-    if (!sendMessage.isPending || !trimmedMessage) {
+    if (!sendMessage.isPending || !pendingContent) {
       return null;
     }
 
@@ -73,11 +73,11 @@ function ChatPage() {
       id: "pending-user-message",
       project_id: projectId,
       role: "user" as const,
-      content: trimmedMessage,
+      content: pendingContent,
       citations: [],
       created_at: new Date().toISOString(),
     };
-  }, [message, projectId, sendMessage.isPending]);
+  }, [pendingContent, projectId, sendMessage.isPending]);
 
   const displayedMessages = useMemo(() => {
     if (!pendingUserMessage) {
@@ -96,16 +96,18 @@ function ChatPage() {
 
   const messageError = message.trim() ? "" : "Message is required";
 
+  const submitMessage = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || sendMessage.isPending) return;
+    setPendingContent(trimmed);
+    setMessage("");
+    await sendMessage.mutateAsync(trimmed);
+    setPendingContent(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const trimmedMessage = message.trim();
-    if (!trimmedMessage || sendMessage.isPending) {
-      return;
-    }
-
-    await sendMessage.mutateAsync(trimmedMessage);
-    setMessage("");
+    await submitMessage(message);
   };
 
   if (isLoading) {
@@ -309,6 +311,13 @@ function ChatPage() {
                 rows={2}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    submitMessage(message);
+                  }
+                }}
+                disabled={sendMessage.isPending}
                 className="rounded-xl resize-none"
               />
               <Button
