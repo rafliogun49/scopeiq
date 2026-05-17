@@ -15,7 +15,12 @@ from dotenv import load_dotenv
 from langfuse import Langfuse
 
 from app.rag.retrieval import query as _rag_query
-from mcp_server.python_exec import python_exec as _python_exec
+
+try:
+    from mcp_server.python_exec import python_exec as _python_exec
+except ImportError:
+    async def _python_exec(code: str, dataset_id: str = "{}") -> dict:  # type: ignore[misc]
+        return {"stdout": "", "charts": [], "error": "python_exec unavailable (MCP server not running)"}
 
 load_dotenv(pathlib.Path(__file__).parent.parent.parent / ".env")
 
@@ -51,13 +56,30 @@ async def python_exec(code: str, dataset_json: str = "{}") -> str:
 
 # ── Agent ─────────────────────────────────────────────────────────────────────
 
-synthesizer_agent = Agent(
-    name="SynthesizerAgent",
-    model="gpt-4o",
-    instructions=_PROMPT,
-    tools=[rag_query, python_exec],
-    model_settings=ModelSettings(temperature=0),  # deterministic — hasil konsisten tiap run
-)
+def _get_synthesizer_model() -> str:
+    from app.core.config import settings
+    return settings.SYNTHESIZER_MODEL
+
+
+def _supports_temperature(model: str) -> bool:
+    no_temp_prefixes = ("gpt-5", "o1", "o3", "o4")
+    return not any(model.startswith(p) for p in no_temp_prefixes)
+
+
+def _make_synthesizer_agent() -> Agent:
+    model = _get_synthesizer_model()
+    kwargs: dict = {
+        "name": "SynthesizerAgent",
+        "model": model,
+        "instructions": _PROMPT,
+        "tools": [rag_query, python_exec],
+    }
+    if _supports_temperature(model):
+        kwargs["model_settings"] = ModelSettings(temperature=0)
+    return Agent(**kwargs)
+
+
+synthesizer_agent = _make_synthesizer_agent()
 
 
 # ── Validation helper ─────────────────────────────────────────────────────────

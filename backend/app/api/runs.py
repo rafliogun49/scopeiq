@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session, col, select
 
-from app.api.deps import CurrentUserDep, SessionDep
+from app.api.deps import CurrentUserDep, SessionDep, StreamUserDep
 from app.models.project import Project
 from app.models.run import Run, RunEvent
 from app.schemas.runs import (
@@ -172,7 +172,7 @@ async def _stream_run_events(run_id: UUID):
 def stream_run(
     run_id: UUID,
     session: SessionDep,
-    current_user: CurrentUserDep,
+    current_user: StreamUserDep,
 ) -> StreamingResponse:
     _load_owned_run(session, run_id, current_user.id)
     return StreamingResponse(

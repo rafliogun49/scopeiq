@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     RETRY_ATTEMPTS: int = 3
     RETRY_BASE_SECONDS: float = 2.0
 
+    # Model selection — override in .env to use gpt-4o when rate limits allow
+    SYNTHESIZER_MODEL: str = "gpt-5.5"
+
 
 settings = Settings()
 

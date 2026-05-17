@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import re
+import time
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -14,6 +16,21 @@ from app.models.project import Project
 from app.models.run import Run, RunEvent
 from app.workers.budget import BudgetExceeded, RunBudget, budget_var
 from app.workers.celery_app import celery_app
+
+
+def _run_with_tpm_retry(fn, max_attempts: int = 3):
+    """Call fn(); on OpenAI 429 TPM errors, wait the retry-after time and retry."""
+    for attempt in range(max_attempts):
+        try:
+            return fn()
+        except Exception as exc:
+            msg = str(exc)
+            match = re.search(r"try again in (\d+(?:\.\d+)?)s", msg, re.IGNORECASE)
+            if match and attempt < max_attempts - 1:
+                wait = float(match.group(1)) + 3  # 3s buffer
+                time.sleep(wait)
+            else:
+                raise
 
 
 @celery_app.task(bind=True, name="run_research")
@@ -110,21 +127,66 @@ def run_research_task(self, run_id: str) -> dict:
                 )
                 session.commit()
 
-            # Build a markdown report from the scraped docs.
-            if docs:
-                from collections import defaultdict
+            # ── Social agent: scrape HN / Reddit / StackExchange ─────────────
+            session.add(
+                RunEvent(run_id=run_uuid, type="agent_started", agent="social", payload={})
+            )
+            session.commit()
+            competitors = list(project.known_competitors or [])
+            social_query = project.idea + (
+                " " + " ".join(f'"{c}"' for c in competitors) if competitors else ""
+            )
+            try:
+                from app.agents.social import run_social
+                social_text = asyncio.run(run_social(social_query, run_id=str(run_uuid)))
+                session.add(
+                    RunEvent(
+                        run_id=run_uuid,
+                        type="agent_finished",
+                        agent="social",
+                        payload={"chars": len(social_text)},
+                    )
+                )
+            except Exception as exc:
+                session.add(
+                    RunEvent(
+                        run_id=run_uuid,
+                        type="log",
+                        agent="social",
+                        payload={"warning": str(exc)[:300]},
+                    )
+                )
+            session.commit()
 
-                by_competitor: dict[str, list] = defaultdict(list)
-                for d in docs:
-                    by_competitor[d.competitor].append(d)
-                sections = ["# Competitive Research Report\n"]
-                for competitor, comp_docs in by_competitor.items():
-                    sections.append(f"## {competitor}\n")
-                    for doc in comp_docs[:3]:
-                        sections.append(
-                            f"**Source:** {doc.url}  \n**Type:** {doc.source_type}\n\n{doc.text[:1200]}\n"
-                        )
-                run.report_md = "\n---\n\n".join(sections)
+            # ── Synthesizer agent: generate 4-section report via gpt-4o ──────
+            session.add(
+                RunEvent(run_id=run_uuid, type="agent_started", agent="synthesizer", payload={})
+            )
+            session.commit()
+            try:
+                from app.agents.synthesizer import run_synthesizer
+                report_md = _run_with_tpm_retry(
+                    lambda: asyncio.run(run_synthesizer(run_id=str(run_uuid), idea=project.idea))
+                )
+                run.report_md = report_md
+                session.add(
+                    RunEvent(
+                        run_id=run_uuid,
+                        type="agent_finished",
+                        agent="synthesizer",
+                        payload={"words": len(report_md.split())},
+                    )
+                )
+            except Exception as exc:
+                session.add(
+                    RunEvent(
+                        run_id=run_uuid,
+                        type="log",
+                        agent="synthesizer",
+                        payload={"warning": str(exc)[:300]},
+                    )
+                )
+            session.commit()
 
             run.status = "completed"
             run.finished_at = datetime.now(UTC)

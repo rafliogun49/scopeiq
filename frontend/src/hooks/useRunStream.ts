@@ -23,12 +23,9 @@ export function useRunStream(runId: string) {
 
     const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
     const token = localStorage.getItem("access_token");
+    const url = `${baseUrl}/runs/${runId}/stream${token ? `?token=${encodeURIComponent(token)}` : ""}`;
 
-    const eventSource = new EventSource(`${baseUrl}/runs/${runId}/stream`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    } as EventSourceInit);
+    const eventSource = new EventSource(url);
 
     eventSource.onopen = () => {
       setStatus("streaming");

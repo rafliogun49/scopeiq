@@ -5,7 +5,6 @@ from uuid import UUID
 
 from agents import Agent, Runner, function_tool
 from langfuse import Langfuse
-from openai import AsyncOpenAI
 
 from app.rag.index import index_chunks  # ← tambah ini
 from app.schemas.rag import RawDoc  # ← tambah ini
@@ -14,37 +13,32 @@ from app.tools.stackexchange import stackexchange_search
 from app.tools.tavily import tavily_search
 
 _PROMPT = (pathlib.Path(__file__).parent.parent.parent / "prompts" / "social.md").read_text()
-_openai = AsyncOpenAI()
 _langfuse = Langfuse()
 VALID_THEMES = {"pricing", "UX", "sync", "support", "missing-feature"}
 
 
 # ── Theme Classification ──────────────────────────────────────────────────────
 
+_THEME_KEYWORDS: dict[str, list[str]] = {
+    "pricing": ["price", "pricing", "expensive", "cost", "cheap", "plan", "subscription", "pay", "billing", "fee"],
+    "UX": ["ux", "ui", "interface", "design", "confus", "hard to use", "difficult", "clunky", "slow", "ugly"],
+    "sync": ["sync", "offline", "real-time", "realtime", "lag", "delay", "update", "refresh", "conflict"],
+    "support": ["support", "help", "customer service", "response", "ticket", "documentation", "docs"],
+    "missing-feature": ["missing", "lack", "wish", "want", "feature", "request", "need", "should have", "would love"],
+}
 
-async def classify_theme(snippet: str) -> str:
-    resp = await _openai.chat.completions.create(
-        model="gpt-4o-mini",
-        temperature=0,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "Classify the user complaint into exactly one of these themes: "
-                    "pricing, UX, sync, support, missing-feature. "
-                    "Reply with only the theme word, nothing else."
-                ),
-            },
-            {"role": "user", "content": snippet[:500]},
-        ],
-    )
-    theme = (resp.choices[0].message.content or "").strip().lower()
-    return theme if theme in VALID_THEMES else "UX"
+
+def classify_theme(text: str) -> str:
+    """Fast keyword-based theme classifier — no API calls."""
+    lower = text.lower()
+    scores = {theme: sum(1 for kw in kws if kw in lower) for theme, kws in _THEME_KEYWORDS.items()}
+    best = max(scores, key=lambda t: scores[t])
+    return best if scores[best] > 0 else "UX"
 
 
 async def classify_snippets(snippets: list[dict]) -> list[dict]:
     for s in snippets:
-        s["theme"] = await classify_theme(s.get("snippet") or s.get("text", ""))
+        s["theme"] = classify_theme(s.get("snippet") or s.get("text", ""))
     return snippets
 
 
